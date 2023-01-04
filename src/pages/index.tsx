@@ -1,13 +1,12 @@
-import { Container, Text } from "@chakra-ui/react";
+import { Container } from "@chakra-ui/react";
 
 import { getLayout } from "@/components/common/Layout";
+import { Board } from "@/components/landing/Board";
 
 function Home() {
   return (
     <Container pb={12} textAlign="center" mt="52px">
-      <Text as="h1" fontSize="32px" lineHeight="1.5" fontWeight={700}>
-        Bonk!
-      </Text>
+      <Board />
     </Container>
   );
 }
