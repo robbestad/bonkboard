@@ -1,7 +1,15 @@
-import { useEffect, useRef } from "react";
-import { Box, Flex } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
+import { RgbaColor, RgbaColorPicker } from "react-colorful";
+import { Box, Flex, Text } from "@chakra-ui/react";
+
+const CANVAS_SIZE = {
+  width: 500,
+  height: 500,
+};
 
 export function Board() {
+  const [color, setColor] = useState<RgbaColor>({ r: 0, g: 0, b: 0, a: 1 });
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -15,16 +23,18 @@ export function Board() {
   }, []);
 
   return (
-    <Flex direction="column" align="center" justify="center">
-      Wow such board! gg
+    <Flex direction="column" align="center" justify="center" gap={8}>
+      <Text>Wow such board! gg</Text>
+
+      <RgbaColorPicker color={color} onChange={setColor} />
+
       <Box
         // @ts-ignore
         ref={canvasRef}
         as="canvas"
-        width="500px"
-        height="500px"
+        width={`${CANVAS_SIZE}px`}
+        height={`${CANVAS_SIZE}px`}
         border="1px"
-        mt={8}
       />
     </Flex>
   );
