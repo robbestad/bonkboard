@@ -32,8 +32,8 @@ export function Board() {
         // @ts-ignore
         ref={canvasRef}
         as="canvas"
-        width={`${CANVAS_SIZE}px`}
-        height={`${CANVAS_SIZE}px`}
+        width={`${CANVAS_SIZE.width}px`}
+        height={`${CANVAS_SIZE.height}px`}
         border="1px"
       />
     </Flex>
