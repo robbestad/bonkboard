@@ -1,8 +1,15 @@
 import Head from "next/head";
 import { Flex } from "@chakra-ui/react";
+import { VT323 } from "@next/font/google";
 
 import { Header } from "@/components/common/Header";
 import { SolanaProvider } from "@/contexts/SolanaContext";
+
+const dotGothic16 = VT323({
+  weight: ["400"],
+  subsets: ["latin"],
+  variable: "--font-pixel",
+});
 
 type LayoutProps = {
   /**
@@ -27,6 +34,7 @@ export function Layout({ title, children }: LayoutProps) {
         flex={1}
         flexDirection="column"
         h="100vh"
+        className={dotGothic16.className}
         // overflow="hidden"
       >
         <Flex

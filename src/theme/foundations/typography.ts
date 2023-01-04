@@ -1,7 +1,7 @@
 const typography = {
   fonts: {
-    heading: "'DM Sans', system-ui, sans-serif",
-    body: "'DM Sans', system-ui, sans-serif",
+    heading: "var(--font-pixel), system-ui, sans-serif",
+    body: "var(--font-pixel), system-ui, sans-serif",
   },
   fontSizes: {
     xxs: "0.625rem", // 10px

@@ -23,7 +23,7 @@ const styles = {
       borderStyle: "solid",
       borderColor: "card.borderLine",
       p: 6,
-      fontFamily: "'DM Sans', system-ui, sans-serif",
+      fontFamily: "var(--font-pixel), system-ui, sans-serif",
     },
     ".wallet-adapter-modal-button-close": {
       bg: "none",

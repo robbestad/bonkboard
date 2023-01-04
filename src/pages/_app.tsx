@@ -3,9 +3,6 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import { ChakraProvider } from "@chakra-ui/react";
 
-import "@fontsource/dm-sans";
-import "@fontsource/dm-sans/500.css";
-import "@fontsource/dm-sans/700.css";
 import { SnackbarProvider } from "@/contexts/SnackbarContext";
 import theme from "@/theme/index";
 
