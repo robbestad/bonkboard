@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/locales/*": ["locales/*"],
+      "@/public/*": ["public/*"],
+      "@/__generated__/*": ["src/__generated__/*"],
+      "@/components/*": ["src/components/*"],
+      "@/hooks/*": ["src/hooks/*"],
+      "@/res/*": ["src/res/*"],
+      "@/theme/*": ["src/theme/*"],
+      "@/utils/*": ["src/utils/*"],
+      "@/contexts/*": ["src/contexts/*"],
+      "@/lib/*": ["src/lib/*"],
+      "@/apis/*": ["src/apis/*"],
+      "@/types/*": ["types/*"],
+      "@emotion/core": ["types/emotion.d.ts"]
+    },
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+
+    // https://stackoverflow.com/questions/33464504/using-spread-syntax-and-new-set-with-typescript
+    // in ScnSolendMarket
+    "downlevelIteration": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "next.config.js",
+    "next-sitemap.config.js",
+    "genUnstakeApi.js",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": ["node_modules"]
+}

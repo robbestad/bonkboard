@@ -1,0 +1,96 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["simple-import-sort"],
+  "extends": [
+    "airbnb",
+    "airbnb-typescript",
+    "airbnb/hooks",
+    "plugin:@next/next/recommended",
+    "plugin:@next/next/core-web-vitals",
+    "prettier"
+  ],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
+  "rules": {
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          ["^react$", "^next", "^react", "^@?\\w"],
+          [
+            "^(api|components|config|libs|res|styles|theme|utils)(/.*|$)",
+            "^\\."
+          ],
+          ["^[^.]"]
+        ]
+      }
+    ],
+    "import/no-extraneous-dependencies": [
+      "error",
+      {
+        "devDependencies": [
+          "**/*.stories.tsx",
+          "**/*.test.tsx",
+          "**/*.spec.tsx",
+          "jest.setup.ts"
+        ]
+      }
+    ],
+    "react/react-in-jsx-scope": "off",
+    "react/jsx-props-no-spreading": "off",
+    "react/require-default-props": "off",
+    "import/prefer-default-export": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [".*"]
+      }
+    ],
+    "@typescript-eslint/no-use-before-define": [
+      "error",
+      { "functions": false, "variables": false }
+    ],
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ForInStatement",
+        "message": "for..in loops iterate over the entire prototype chain, which is virtually never what you want. Use Object.{keys,values,entries}, and iterate over the resulting array."
+      },
+      {
+        "selector": "LabeledStatement",
+        "message": "Labels are a form of GOTO; using them makes code confusing and hard to maintain and understand."
+      },
+      {
+        "selector": "WithStatement",
+        "message": "`with` is disallowed in strict mode because it makes code impossible to predict and optimize."
+      }
+    ],
+    "react/prop-types": "off",
+    "no-plusplus": "off",
+    "react/no-unstable-nested-components": ["error", { "allowAsProps": true }]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/components/**/index.ts",
+        "**/contexts/**/index.ts",
+        "**/hooks/**/index.ts",
+        "**/apis/**/index.ts",
+        "**/lib/**/index.ts",
+        "**/*.stories.tsx",
+        "**/*.test.tsx",
+        "**/*.test.ts",
+        "**/*.spec.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": ["off"]
+      }
+    }
+  ]
+}
