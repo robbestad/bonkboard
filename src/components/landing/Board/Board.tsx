@@ -21,9 +21,14 @@ export function Board() {
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
   const [actionMode, setActionMode] = useState<string>("normal");
+  const [pixelsTouched, setPixelsTouched] = useState<object>({});
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+
+  }, [actions])
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -81,16 +86,31 @@ export function Board() {
           .split(", ");
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
-
+        
         // Do a very quick and dirty dedupe
 
-        if (
-          actions.length >= 1 &&
+        if (actions.length >= 1 && 
           JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
-        ) {
+          ) {
           // pass don't do anything
-        } else {
-          setActions([...actions, [[x, y, pixel.data], newPixel]]);
+        }
+
+        else {
+          setActions([...actions, [
+            [x, y, pixel.data], 
+            newPixel
+          ]])
+
+          setPixelsTouched((prev) => {
+            const tmp = prev
+            if ([x,y] in tmp) {
+              tmp[[x,y]] = tmp[[x,y]] + 1;
+            }
+            else {
+              tmp[[x,y]] = 1;
+            }
+            return tmp
+          })
         }
       }
     }
@@ -152,14 +172,26 @@ export function Board() {
 
   function undo() {
     const canvas = canvasRef.current;
-    if (canvas && actionMode.length > 0) {
+    if (canvas && actions.length > 0) {
       const context = canvas.getContext("2d");
       if (context) {
         const [x, y, prevColour] = actions[actions.length - 1][0];
         context.fillStyle = `rgb(${prevColour[0]}, ${prevColour[1]}, ${prevColour[2]})`;
         context?.fillRect(x, y, 1, 1);
         // Pop out the last element of the array
+
         setActions(actions.slice(0, -1));
+
+        setPixelsTouched((prev) => {
+          if ([x,y] in prev) {
+            prev[[x,y]] = Math.max(prev[[x,y]] - 1, 0);
+          }
+          else {
+            prev[[x,y]] = 0;
+          }
+          return prev
+        })
+
       }
     }
   }
@@ -205,9 +237,14 @@ export function Board() {
     setTranslateY(translateY - 40);
   }
 
-  function parse(a: any[]) {
-    return `Pixels changed: ${a.length}. BONK cost: ${a.length * 10000}`;
-    // return a.reduce((acc, val) => `${acc  }\n\n x: ${val[0][0]}, y: ${val[0][1]}: ${val[0][2]} --> ${val[1][2]}`, '')
+  // Count all the non-zero values of keys in o
+  // Used to count the number of unique changed pixels
+  function pixelsChanged(o: object) {
+    return Object.keys(o).reduce((acc, key) => acc + (o[key] > 0), 0)
+  }
+
+  function parse() {
+    return `Pixels changed: ${pixelsChanged(pixelsTouched)}. BONK cost: ${pixelsChanged(pixelsTouched) * 10000}`;
   }
 
   return (
@@ -336,7 +373,7 @@ export function Board() {
         <Button size="lg" onClick={() => {}}>
           Submit!
         </Button>
-        <Text>{parse(actions)}</Text>
+        <Text>{parse()}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
         <input type="text" value={color} />
         <canvas
