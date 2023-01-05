@@ -21,14 +21,12 @@ export function Board() {
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
   const [actionMode, setActionMode] = useState<string>("normal");
-  const [pixelsTouched, setPixelsTouched] = useState<object>({});
+  const [pixelsTouched, setPixelsTouched] = useState<{ [key: string]: number }>(
+    {}
+  );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
-  
-  useEffect(() => {
-
-  }, [actions])
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -86,31 +84,28 @@ export function Board() {
           .split(", ");
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
-        
+
         // Do a very quick and dirty dedupe
-
-        if (actions.length >= 1 && 
+        if (
+          actions.length >= 1 &&
           JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
-          ) {
+        ) {
           // pass don't do anything
-        }
-
-        else {
-          setActions([...actions, [
-            [x, y, pixel.data], 
-            newPixel
-          ]])
+        } else {
+          setActions([...actions, [[x, y, pixel.data], newPixel]]);
 
           setPixelsTouched((prev) => {
-            const tmp = prev
-            if ([x,y] in tmp) {
-              tmp[[x,y]] = tmp[[x,y]] + 1;
+            const tmp = prev;
+            // @ts-ignore
+            if ([x, y] in tmp) {
+              // @ts-ignore
+              tmp[[x, y]] = tmp[[x, y]] + 1;
+            } else {
+              // @ts-ignore
+              tmp[[x, y]] = 1;
             }
-            else {
-              tmp[[x,y]] = 1;
-            }
-            return tmp
-          })
+            return tmp;
+          });
         }
       }
     }
@@ -183,15 +178,17 @@ export function Board() {
         setActions(actions.slice(0, -1));
 
         setPixelsTouched((prev) => {
-          if ([x,y] in prev) {
-            prev[[x,y]] = Math.max(prev[[x,y]] - 1, 0);
+          const tmp = prev;
+          // @ts-ignore
+          if ([x, y] in tmp) {
+            // @ts-ignore
+            tmp[[x, y]] = Math.max(tmp[[x, y]] - 1, 0);
+          } else {
+            // @ts-ignore
+            tmp[[x, y]] = 0;
           }
-          else {
-            prev[[x,y]] = 0;
-          }
-          return prev
-        })
-
+          return tmp;
+        });
       }
     }
   }
@@ -239,12 +236,14 @@ export function Board() {
 
   // Count all the non-zero values of keys in o
   // Used to count the number of unique changed pixels
-  function pixelsChanged(o: object) {
-    return Object.keys(o).reduce((acc, key) => acc + (o[key] > 0), 0)
+  function pixelsChanged(o: { [k: string]: number }) {
+    return Object.keys(o).reduce((acc, key) => acc + Number(o[key] > 0), 0);
   }
 
   function parse() {
-    return `Pixels changed: ${pixelsChanged(pixelsTouched)}. BONK cost: ${pixelsChanged(pixelsTouched) * 10000}`;
+    return `Pixels changed: ${pixelsChanged(pixelsTouched)}. BONK cost: ${
+      pixelsChanged(pixelsTouched) * 10000
+    }`;
   }
 
   return (
