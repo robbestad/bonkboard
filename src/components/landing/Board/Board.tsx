@@ -15,6 +15,7 @@ export function Board() {
   const [actions, setActions] = useState<Array>([])
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
+  const [actionMode, setActionMode] = useState<string>("normal");
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -41,6 +42,28 @@ export function Board() {
       }
     }
   }, []);
+
+  function uint8torgb(u: Uint8ClampedArray) {
+    return `rgba(${u[0]}, ${u[1]}, ${u[2]}, ${u[3]})`
+  }
+
+  function performActionOnCanvas(e: any) {
+    // Eyedropper mode
+    if (actionMode === "eyedropper") {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        if (context) {
+          const [x, y] = getCursorPosition(e);
+          const pixel = context.getImageData(x, y, 1, 1);
+          setColor(uint8torgb(pixel.data))
+        }
+      }
+    }
+    else {
+      paint(e)
+    }
+  }
 
   function paint(e: any) {
     const canvas = canvasRef.current;
@@ -201,9 +224,12 @@ export function Board() {
                 const [x, y] = getCursorPosition(e);
                 setMouseX(x);
                 setMouseY(y);
+                if (e.buttons === 1) {
+                  paint(e);
+                }
               }}
               onClick={(e) => {
-                paint(e);
+                performActionOnCanvas(e);
               }}
             />
           </div>
@@ -218,6 +244,17 @@ export function Board() {
             <Button variant='outline' onClick={(e) => {panDown()}}>Pan Down</Button>
             <Button variant='outline' onClick={() => {undo()}}>Undo</Button>
             <Button variant='outline' onClick={() => {}}>Refresh Image</Button>
+            <Button 
+              variant={actionMode !== "eyedropper" ? 'outline' : 'solid'}
+              onClick={() => {
+                if (actionMode === "eyedropper") {
+                  setActionMode("normal")
+                }
+                else {
+                  setActionMode("eyedropper")
+                }}}>
+                Eyedropper Mode
+            </Button>
 
           <Button size="lg" onClick={() => {}}>Submit!</Button>
           <Text>
