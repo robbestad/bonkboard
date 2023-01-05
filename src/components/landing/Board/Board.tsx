@@ -2,12 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
+import { SubmitButton } from "@/components/landing/Board/SubmitButton";
+
 const CANVAS_SIZE = {
   width: 500,
   height: 500,
 };
 
 export function Board() {
+  const [isPending, setIsPending] = useState(false);
+
   const [color, setColor] = useState<string>("rgba(0,0,0,1)");
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
@@ -305,9 +309,11 @@ export function Board() {
           Eyedropper Mode
         </Button>
 
-        <Button size="lg" onClick={() => {}}>
-          Submit!
-        </Button>
+        <SubmitButton
+          actions={actions}
+          isPending={isPending}
+          setIsPending={setIsPending}
+        />
         <Text>{parse(actions)}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
         <input type="text" value={color} />

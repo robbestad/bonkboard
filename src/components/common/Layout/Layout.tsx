@@ -3,6 +3,7 @@ import { Flex } from "@chakra-ui/react";
 import { VT323 } from "@next/font/google";
 
 import { Header } from "@/components/common/Header";
+import { BoardProgramProvider } from "@/contexts/BoardProgramContext";
 import { SolanaProvider } from "@/contexts/SolanaContext";
 
 const dotGothic16 = VT323({
@@ -54,6 +55,8 @@ export function Layout({ title, children }: LayoutProps) {
 
 export const getLayout = (page: React.ReactNode, title?: string) => (
   <SolanaProvider>
-    <Layout title={title}>{page}</Layout>
+    <BoardProgramProvider>
+      <Layout title={title}>{page}</Layout>
+    </BoardProgramProvider>
   </SolanaProvider>
 );

@@ -1,12 +1,12 @@
 import { Program } from "@project-serum/anchor";
+import { ClusterType } from "@soceanfi/stake-pool-sdk";
 import { useConnection } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey } from "@solana/web3.js";
 import useSWR from "swr";
 
-import {
-  BonkBoardProgram,
-  IDL,
-} from "@/hooks/useBoardPixels/bonk_board_program";
+import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
+import { useSolana } from "@/contexts/SolanaContext";
+import { BOARD_ACCOUNT, BOARD_DATA_ACCOUNT } from "@/hooks/useBoardProgram";
+import { BonkBoardProgram } from "@/lib/bonk_board_program";
 
 interface Pixel {
   x: number;
@@ -18,25 +18,17 @@ export interface BoardPixels {
   pixels: Pixel[];
 }
 
-// Change this when we go live
-const PROG_ID = new PublicKey("GG26rKD3RoP2dDcEufYUoNvVzkh1eYRpiF4p5SVC1bni");
-const BOARD_ACC = new PublicKey("DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp");
-const BOARD_DATA_ACC = new PublicKey(
-  "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr"
-);
-
-const fetcher = async (connection: Connection): Promise<BoardPixels> => {
-  const BONK_PROGRAM: Program<BonkBoardProgram> = new Program(
-    IDL as BonkBoardProgram,
-    PROG_ID,
-    { connection }
-  );
-
-  const board = await BONK_PROGRAM.account.board.fetch(BOARD_ACC);
+const fetcher = async (
+  boardProgram: Program<BonkBoardProgram>,
+  cluster: ClusterType | "localnet"
+): Promise<BoardPixels> => {
+  const board = await boardProgram.account.board.fetch(BOARD_ACCOUNT[cluster]);
 
   console.log({ board });
 
-  const boardData = await BONK_PROGRAM.account.boardData.fetch(BOARD_DATA_ACC);
+  const boardData = await boardProgram.account.boardData.fetch(
+    BOARD_DATA_ACCOUNT[cluster]
+  );
 
   console.log({ boardData });
 
@@ -55,10 +47,14 @@ interface UseBoardPixels {
 
 export function useBoardPixels(): UseBoardPixels {
   const { connection } = useConnection();
+  const {
+    cluster: { network },
+  } = useSolana();
+  const { boardProgram } = useBoardProgramContext();
 
   const { data, error } = useSWR<BoardPixels, Error>(
     [connection.rpcEndpoint, "pixels"],
-    () => fetcher(connection),
+    () => fetcher(boardProgram, network),
     { refreshInterval: 60_000, revalidateOnFocus: false }
   );
 
