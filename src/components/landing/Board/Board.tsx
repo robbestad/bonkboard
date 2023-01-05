@@ -118,7 +118,9 @@ export function Board() {
         context.fillStyle = `rgba(${prevColour[0]}, ${prevColour[1]}, ${prevColour[2]}, ${prevColour[3] / 255})`
         context?.fillRect(x, y, 1, 1);
         // Pop out the last element of the array
-        setActions(actions.slice(0, -1))
+        if (actions.length > 0) {
+          setActions(actions.slice(0, -1))
+        }
       }
     }
   }
@@ -127,8 +129,6 @@ export function Board() {
     const canvas = canvasRef.current;
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      console.log(event.clientX, event.clientY)
-      console.log(rect.left, rect.top)
       const x = Math.floor((event.clientX - rect.left) / scale) - 1;
       const y = Math.floor((event.clientY - rect.top) / scale) - 1;
       return [x, y];
@@ -216,12 +216,13 @@ export function Board() {
             <Button variant='outline' onClick={(e) => {panUp()}}>Pan Up</Button>
             <Button variant='outline' onClick={(e) => {panDown()}}>Pan Down</Button>
             <Button variant='outline' onClick={() => {undo()}}>Undo</Button>
+            <Button variant='outline' onClick={() => {undo()}}>Refresh Image</Button>
 
           <Button size="lg" onClick={() => {}}>Submit!</Button>
           <Text>
             {parse(actions)}
           </Text>
-          <RgbColorPicker color={color} onChange={setColor} /> 
+          <RgbColorPicker color={color} onChange={setColor} />
           <canvas
             // @ts-ignore
             ref={zoomCanvasRef}
