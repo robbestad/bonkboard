@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { RgbaColor, RgbaColorPicker } from "react-colorful";
-import { Flex, Text } from "@chakra-ui/react";
+import { Button, ButtonGroup, Flex, SimpleGrid , Text } from "@chakra-ui/react";
 
 const CANVAS_SIZE = {
   width: 500,
   height: 500,
 };
 
-const SCALE = 3;
-
 export function Board() {
   const [color, setColor] = useState<RgbaColor>({ r: 0, g: 0, b: 0, a: 1 });
+  const [scale, setScale] = useState<number>(1);
+  const [translateX, setTranslateX] = useState<number>(0);
+  const [translateY, setTranslateY] = useState<number>(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -80,41 +81,85 @@ export function Board() {
     const canvas = canvasRef.current;
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((event.clientX - rect.left) / SCALE);
-      const y = Math.floor((event.clientY - rect.top) / SCALE);
+      const x = Math.floor((event.clientX - rect.left) / scale);
+      const y = Math.floor((event.clientY - rect.top) / scale);
       return [x, y];
     }
     return [-1, -1];
   }
 
+  function zoomIn() {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      setScale(scale + 1)
+    }
+  }
+
+  function zoomOut() {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      setScale(Math.max(scale - 1, 1))
+    }
+  }
+
+  function panLeft() {
+    setTranslateX(translateX + 40)
+  }
+
+  function panRight() {
+    setTranslateX(translateX - 40)
+  }
+
+  function panUp() {
+    setTranslateY(translateY + 40)
+  }
+
+  function panDown() {
+    setTranslateY(translateY - 40)
+  }
+
   return (
-    <Flex direction="column" align="center" justify="center" gap={8}>
-      <Text>Wow such board! gg</Text>
+    // <Flex direction="column" align="center" justify="center" gap={8}>
 
-      <RgbaColorPicker color={color} onChange={setColor} />
+    //   <Text>Wow such board! gg</Text>
+    //   <RgbaColorPicker color={color} onChange={setColor} /> 
 
-      <Flex direction="row">
+      <SimpleGrid columns={2} direction="row">
+
         <div>
-          <canvas
-            // @ts-ignore
-            ref={canvasRef}
-            width={CANVAS_SIZE.width}
-            height={CANVAS_SIZE.height}
-            style={{
-              imageRendering: "pixelated",
-              border: "1px solid black",
-              transform: `scale(${SCALE})`,
+          <div
+            style = {{
+              translate: `${translateX}px ${translateY}px`
             }}
-            onMouseMove={(e) => {
-              showZoom(e);
-            }}
-            onClick={(e) => {
-              paint(e);
-              showZoom(e);
-            }}
-          />
+          >
+            <canvas
+              // @ts-ignore
+              ref={canvasRef}
+              width={CANVAS_SIZE.width}
+              height={CANVAS_SIZE.height}
+              style={{
+                imageRendering: "pixelated",
+                border: "1px solid black",
+                transform: `scale(${scale})`,
+              }}
+              onMouseMove={(e) => {
+                showZoom(e);
+              }}
+              onClick={(e) => {
+                paint(e);
+                showZoom(e);
+              }}
+            />
+          </div>
         </div>
+
         <div>
+          <Button onClick={(e) => {zoomIn(); showZoom(e);}}>Zoom In</Button>
+          <Button onClick={(e) => {zoomOut(); showZoom(e);}}>Zoom Out</Button>
+          <Button onClick={(e) => {panLeft(); showZoom(e);}}>Pan Left</Button>
+          <Button onClick={(e) => {panRight(); showZoom(e);}}>Pan Right</Button>
+          <Button onClick={(e) => {panUp(); showZoom(e);}}>Pan Up</Button>
+          <Button onClick={(e) => {panDown(); showZoom(e);}}>Pan Down</Button>
           <canvas
             // @ts-ignore
             ref={zoomCanvasRef}
@@ -127,7 +172,7 @@ export function Board() {
             }}
           />
         </div>
-      </Flex>
-    </Flex>
+      </SimpleGrid>
+    //  </Flex>
   );
 }
