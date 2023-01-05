@@ -1,12 +1,8 @@
-import { Container } from "@chakra-ui/react";
-
 import { getLayout } from "@/components/common/Layout";
 import { Board } from "@/components/landing/Board";
 
 function Home() {
-  return (
-      <Board />
-  );
+  return <Board />;
 }
 
 Home.getLayout = (page: React.ReactNode) => getLayout(page);
