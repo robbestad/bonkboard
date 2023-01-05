@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { RgbaColor, RgbColorPicker } from "react-colorful";
+import { RgbStringColorPicker } from "react-colorful";
 import { Button, ButtonGroup, Flex, Grid, GridItem , Text } from "@chakra-ui/react";
 
 const CANVAS_SIZE = {
@@ -8,7 +8,7 @@ const CANVAS_SIZE = {
 };
 
 export function Board() {
-  const [color, setColor] = useState<RgbaColor>({ r: 0, g: 0, b: 0, a: 1 });
+  const [color, setColor] = useState<string>('rgba(0,0,0,1)');
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
@@ -49,7 +49,11 @@ export function Board() {
       if (context) {
         const [x, y] = getCursorPosition(e);
         const pixel = context.getImageData(x, y, 1, 1);
-        const newPixel = [x, y, new Uint8ClampedArray([color.r, color.g, color.b, 255])];
+        const [r,g,b] = color.slice(
+          color.indexOf("(") + 1,
+          color.indexOf(")")
+        ).split(", ");
+        const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
         setActions([...actions, [
           [x, y, pixel.data], 
           newPixel
@@ -174,9 +178,6 @@ export function Board() {
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
 
-    //   <Text>Wow such board! gg</Text>
-    //   <RgbaColorPicker color={color} onChange={setColor} /> 
-
       <Grid templateColumns="3fr 1fr" gap={10} minHeight="100%">
 
         <GridItem backgroundColor="rgba(255,230,220)">
@@ -216,13 +217,14 @@ export function Board() {
             <Button variant='outline' onClick={(e) => {panUp()}}>Pan Up</Button>
             <Button variant='outline' onClick={(e) => {panDown()}}>Pan Down</Button>
             <Button variant='outline' onClick={() => {undo()}}>Undo</Button>
-            <Button variant='outline' onClick={() => {undo()}}>Refresh Image</Button>
+            <Button variant='outline' onClick={() => {}}>Refresh Image</Button>
 
           <Button size="lg" onClick={() => {}}>Submit!</Button>
           <Text>
             {parse(actions)}
           </Text>
-          <RgbColorPicker color={color} onChange={setColor} />
+          <RgbStringColorPicker color={color} onChange={setColor} />
+          <input type="text" value={color}/>
           <canvas
             // @ts-ignore
             ref={zoomCanvasRef}
