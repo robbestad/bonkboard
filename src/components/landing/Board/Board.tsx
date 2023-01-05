@@ -86,15 +86,13 @@ export function Board() {
           .split(", ");
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
-
+        
         // Do a very quick and dirty dedupe
 
-        if (
-          actions.length >= 1 &&
+        if (actions.length >= 1 && 
           JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
-        ) {
+          ) {
           // pass don't do anything
-<<<<<<< HEAD
         }
 
         else {
@@ -113,10 +111,6 @@ export function Board() {
             }
             return tmp
           })
-=======
-        } else {
-          setActions([...actions, [[x, y, pixel.data], newPixel]]);
->>>>>>> origin
         }
       }
     }
