@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
+import { RgbInput } from "@/components/landing/Board/RgbInput";
+import { getRgb } from "@/utils/color";
+
 const CANVAS_SIZE = {
   width: 500,
   height: 500,
@@ -79,9 +82,7 @@ export function Board() {
       if (context) {
         const [x, y] = getCursorPosition(e);
         const pixel = context.getImageData(x, y, 1, 1);
-        const [r, g, b] = color
-          .slice(color.indexOf("(") + 1, color.indexOf(")"))
-          .split(", ");
+        const [r, g, b] = getRgb(color);
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
 
@@ -374,7 +375,7 @@ export function Board() {
         </Button>
         <Text>{parse()}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
-        <input type="text" value={color} />
+        <RgbInput color={color} setColor={setColor} />
         <canvas
           // @ts-ignore
           ref={zoomCanvasRef}
