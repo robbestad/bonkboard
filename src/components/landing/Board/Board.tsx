@@ -7,6 +7,11 @@ const CANVAS_SIZE = {
   height: 500,
 };
 
+const ZOOM_CANVAS_SIZE = {
+  width: 400,
+  height: 400,
+};
+
 export function Board() {
   const [color, setColor] = useState<string>("rgb(0, 0, 0)");
   const [scale, setScale] = useState<number>(1);
@@ -81,13 +86,15 @@ export function Board() {
           .split(", ");
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
-        
+
         // Do a very quick and dirty dedupe
 
-        if (actions.length >= 1 && 
+        if (
+          actions.length >= 1 &&
           JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
-          ) {
+        ) {
           // pass don't do anything
+<<<<<<< HEAD
         }
 
         else {
@@ -106,6 +113,10 @@ export function Board() {
             }
             return tmp
           })
+=======
+        } else {
+          setActions([...actions, [[x, y, pixel.data], newPixel]]);
+>>>>>>> origin
         }
       }
     }
@@ -148,12 +159,17 @@ export function Board() {
             11,
             0,
             0,
-            500,
-            500
+            ZOOM_CANVAS_SIZE.width,
+            ZOOM_CANVAS_SIZE.height
           );
           zoomContext.strokeStyle = "yellow";
           zoomContext.lineWidth = 3;
-          zoomContext.strokeRect(250 - 23, 250 - 23, 46, 46);
+          zoomContext.strokeRect(
+            (ZOOM_CANVAS_SIZE.width - ZOOM_CANVAS_SIZE.width / 11) / 2,
+            (ZOOM_CANVAS_SIZE.height - ZOOM_CANVAS_SIZE.height / 11) / 2,
+            ZOOM_CANVAS_SIZE.width / 11,
+            ZOOM_CANVAS_SIZE.height / 11
+          );
         }
       }
     }
@@ -240,7 +256,7 @@ export function Board() {
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
 
-    <Grid templateColumns="3fr 1fr" gap={10} minHeight="100%">
+    <Grid templateColumns="3fr 1fr" minHeight="calc(100% - 96px - 1px)">
       <GridItem
         backgroundColor="rgb(255,230,220)"
         display="flex"
@@ -279,9 +295,10 @@ export function Board() {
         </div>
       </GridItem>
 
-      <GridItem>
+      <GridItem px={10} pt={4}>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             zoomIn();
           }}
@@ -290,6 +307,7 @@ export function Board() {
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             zoomOut();
           }}
@@ -298,6 +316,7 @@ export function Board() {
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panLeft();
           }}
@@ -306,6 +325,7 @@ export function Board() {
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panRight();
           }}
@@ -314,6 +334,7 @@ export function Board() {
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panUp();
           }}
@@ -322,6 +343,7 @@ export function Board() {
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panDown();
           }}
@@ -330,17 +352,19 @@ export function Board() {
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             undo();
           }}
         >
           Undo
         </Button>
-        <Button variant="outline" onClick={() => {}}>
+        <Button variant="outline" size="sm" onClick={() => {}}>
           Refresh Image
         </Button>
         <Button
           variant={actionMode !== "eyedropper" ? "outline" : "solid"}
+          size="sm"
           onClick={() => {
             if (actionMode === "eyedropper") {
               setActionMode("normal");
@@ -361,8 +385,8 @@ export function Board() {
         <canvas
           // @ts-ignore
           ref={zoomCanvasRef}
-          width={CANVAS_SIZE.width}
-          height={CANVAS_SIZE.height}
+          width={ZOOM_CANVAS_SIZE.width}
+          height={ZOOM_CANVAS_SIZE.height}
           style={{
             imageRendering: "pixelated",
             border: "1px solid black",
