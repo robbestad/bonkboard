@@ -24,7 +24,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
               if (v > 255) {
                 v = 255;
               }
-              setColor(getColorStr(v.toString(), g, b));
+              setColor(getColorStr(v, g, b));
             }
           }}
         />
@@ -40,7 +40,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
               if (v > 255) {
                 v = 255;
               }
-              setColor(getColorStr(r, v.toString(), b));
+              setColor(getColorStr(r, v, b));
             }
           }}
         />
@@ -56,7 +56,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
               if (v > 255) {
                 v = 255;
               }
-              setColor(getColorStr(r, g, v.toString()));
+              setColor(getColorStr(r, g, v));
             }
           }}
         />

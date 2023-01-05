@@ -3,7 +3,8 @@ import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
 import { RgbInput } from "@/components/landing/Board/RgbInput";
-import { getRgb } from "@/utils/color";
+import { useImage } from "@/hooks/useImage";
+import { getColorStr, getRgb } from "@/utils/color";
 
 const CANVAS_SIZE = {
   width: 500,
@@ -16,7 +17,7 @@ const ZOOM_CANVAS_SIZE = {
 };
 
 export function Board() {
-  const [color, setColor] = useState<string>("rgb(0, 0, 0)");
+  const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
@@ -31,6 +32,13 @@ export function Board() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const { imageArr, fetchImage } = useImage();
+
+  useEffect(() => {
+    fetchImage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -44,18 +52,19 @@ export function Board() {
         );
         const { data } = imageData;
         for (let i = 0; i < data.length; i += 4) {
-          data[i] = 255; // red
-          data[i + 1] = 255; // green
-          data[i + 2] = 255; // blue
+          const j = (3 * i) / 4;
+          data[i] = imageArr[j]; // red
+          data[i + 1] = imageArr[j + 1]; // green
+          data[i + 2] = imageArr[j + 2]; // blue
           data[i + 3] = 255; // alpha channel
         }
         context.putImageData(imageData, 0, 0);
       }
     }
-  }, []);
+  }, [imageArr]);
 
   function uint8torgb(u: Uint8ClampedArray) {
-    return `rgb(${u[0]}, ${u[1]}, ${u[2]})`;
+    return getColorStr(u[0], u[1], u[2]);
   }
 
   function performActionOnCanvas(e: any) {
@@ -121,7 +130,11 @@ export function Board() {
         if (context) {
           actions.forEach((action) => {
             const lastAction = action[1];
-            context.fillStyle = `rgb(${lastAction[2][0]}, ${lastAction[2][1]}, ${lastAction[2][2]})`;
+            context.fillStyle = getColorStr(
+              lastAction[2][0],
+              lastAction[2][1],
+              lastAction[2][2]
+            );
             context?.fillRect(lastAction[0], lastAction[1], 1, 1);
           });
         }
@@ -172,7 +185,11 @@ export function Board() {
       const context = canvas.getContext("2d");
       if (context) {
         const [x, y, prevColour] = actions[actions.length - 1][0];
-        context.fillStyle = `rgb(${prevColour[0]}, ${prevColour[1]}, ${prevColour[2]})`;
+        context.fillStyle = getColorStr(
+          prevColour[0],
+          prevColour[1],
+          prevColour[2]
+        );
         context?.fillRect(x, y, 1, 1);
         // Pop out the last element of the array
 
@@ -290,70 +307,28 @@ export function Board() {
       </GridItem>
 
       <GridItem px={10} pt={4}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            zoomIn();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => zoomIn()}>
           Zoom In
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            zoomOut();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => zoomOut()}>
           Zoom Out
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panLeft();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => panLeft()}>
           Pan Left
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panRight();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => panRight()}>
           Pan Right
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panUp();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => panUp()}>
           Pan Up
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panDown();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => panDown()}>
           Pan Down
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            undo();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={() => undo()}>
           Undo
         </Button>
-        <Button variant="outline" size="sm" onClick={() => {}}>
+        <Button variant="outline" size="sm" onClick={() => fetchImage()}>
           Refresh Image
         </Button>
         <Button
@@ -384,7 +359,6 @@ export function Board() {
           style={{
             imageRendering: "pixelated",
             border: "1px solid black",
-            transform: "scale(1)",
           }}
         />
       </GridItem>
