@@ -2,6 +2,7 @@ const styles = {
   global: {
     body: {
       height: "100%",
+      width: "100%",
       bg: "main.white",
       color: "main.black",
     },

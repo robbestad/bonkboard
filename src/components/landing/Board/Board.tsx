@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { RgbaColor, RgbaColorPicker } from "react-colorful";
-import { Button, ButtonGroup, Flex, SimpleGrid , Text } from "@chakra-ui/react";
+import { RgbaColor, RgbColorPicker } from "react-colorful";
+import { Button, ButtonGroup, Flex, Grid, GridItem , Text } from "@chakra-ui/react";
 
 const CANVAS_SIZE = {
   width: 500,
@@ -127,8 +127,10 @@ export function Board() {
     const canvas = canvasRef.current;
     if (canvas) {
       const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((event.clientX - rect.left) / scale);
-      const y = Math.floor((event.clientY - rect.top) / scale);
+      console.log(event.clientX, event.clientY)
+      console.log(rect.left, rect.top)
+      const x = Math.floor((event.clientX - rect.left) / scale) - 1;
+      const y = Math.floor((event.clientY - rect.top) / scale) - 1;
       return [x, y];
     }
     return [-1, -1];
@@ -175,12 +177,12 @@ export function Board() {
     //   <Text>Wow such board! gg</Text>
     //   <RgbaColorPicker color={color} onChange={setColor} /> 
 
-      <SimpleGrid columns={2} direction="row">
+      <Grid templateColumns="3fr 1fr" gap={10} minHeight="100%">
 
-        <div>
+        <GridItem backgroundColor="rgba(255,198,133)">
           <div
             style = {{
-              translate: `${translateX}px ${translateY}px`
+              translate: `${translateX}px ${translateY}px`,
             }}
           >
             <canvas
@@ -192,6 +194,7 @@ export function Board() {
                 imageRendering: "pixelated",
                 border: "1px solid black",
                 transform: `scale(${scale})`,
+                cursor: "crosshair",
               }}
               onMouseMove={(e) => {
                 const [x, y] = getCursorPosition(e);
@@ -203,20 +206,22 @@ export function Board() {
               }}
             />
           </div>
-        </div>
+        </GridItem>
 
-        <div>
-          <Button onClick={(e) => {zoomIn()}}>Zoom In</Button>
-          <Button onClick={(e) => {zoomOut()}}>Zoom Out</Button>
-          <Button onClick={(e) => {panLeft()}}>Pan Left</Button>
-          <Button onClick={(e) => {panRight()}}>Pan Right</Button>
-          <Button onClick={(e) => {panUp()}}>Pan Up</Button>
-          <Button onClick={(e) => {panDown()}}>Pan Down</Button>
-          <Button onClick={() => {undo()}}>Undo</Button>
+        <GridItem>
+            <Button variant='outline' onClick={(e) => {zoomIn()}}>Zoom In</Button>
+            <Button variant='outline' onClick={(e) => {zoomOut()}}>Zoom Out</Button>
+            <Button variant='outline' onClick={(e) => {panLeft()}}>Pan Left</Button>
+            <Button variant='outline' onClick={(e) => {panRight()}}>Pan Right</Button>
+            <Button variant='outline' onClick={(e) => {panUp()}}>Pan Up</Button>
+            <Button variant='outline' onClick={(e) => {panDown()}}>Pan Down</Button>
+            <Button variant='outline' onClick={() => {undo()}}>Undo</Button>
+
+          <Button size="lg" onClick={() => {}}>Submit!</Button>
           <Text>
             {parse(actions)}
           </Text>
-          <RgbaColorPicker color={color} onChange={setColor} /> 
+          <RgbColorPicker color={color} onChange={setColor} /> 
           <canvas
             // @ts-ignore
             ref={zoomCanvasRef}
@@ -228,8 +233,8 @@ export function Board() {
               transform: "scale(1)",
             }}
           />
-        </div>
-      </SimpleGrid>
+        </GridItem>
+      </Grid>
     //  </Flex>
   );
 }
