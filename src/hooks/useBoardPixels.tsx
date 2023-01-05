@@ -8,15 +8,13 @@ import { useSolana } from "@/contexts/SolanaContext";
 import { BOARD_ACCOUNT, BOARD_DATA_ACCOUNT } from "@/hooks/useBoardProgram";
 import { BonkBoardProgram } from "@/lib/bonk_board_program";
 
-interface Pixel {
-  x: number;
-  y: number;
-  color: string;
-}
+// interface Pixel {
+//   x: number;
+//   y: number;
+//   color: string;
+// }
 
-export interface BoardPixels {
-  pixels: Pixel[];
-}
+export type BoardPixels = number[];
 
 const fetcher = async (
   boardProgram: Program<BonkBoardProgram>,
@@ -32,11 +30,7 @@ const fetcher = async (
 
   console.log({ boardData });
 
-  const pixels: Pixel[] = [];
-
-  return {
-    pixels,
-  };
+  return boardData.data;
 };
 
 interface UseBoardPixels {
@@ -57,6 +51,10 @@ export function useBoardPixels(): UseBoardPixels {
     () => fetcher(boardProgram, network),
     { refreshInterval: 60_000, revalidateOnFocus: false }
   );
+
+  if (error) {
+    console.log(error);
+  }
 
   return {
     pixels: data,

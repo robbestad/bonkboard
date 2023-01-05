@@ -6,7 +6,7 @@ export function findFeeAccount(
   boardAccount: PublicKey
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
-    [boardAccount.toBuffer()],
+    [boardAccount.toBuffer(), Buffer.from("fee")],
     bonkBoardProgramId
   );
 }

@@ -3,6 +3,7 @@ import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
+import { useBoardPixels } from "@/hooks/useBoardPixels";
 
 const CANVAS_SIZE = {
   width: 500,
@@ -24,9 +25,11 @@ export function Board() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const { pixels } = useBoardPixels();
+
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
+    if (canvas && pixels) {
       const context = canvas.getContext("2d");
       if (context) {
         // draw something on canvas on load
@@ -35,17 +38,19 @@ export function Board() {
           CANVAS_SIZE.width,
           CANVAS_SIZE.height
         );
+        console.log(pixels);
         const { data } = imageData;
-        for (let i = 0; i < data.length; i += 4) {
+        for (let i = 0; i < pixels.length; i += 3) {
           data[i] = 255; // red
           data[i + 1] = 255; // green
           data[i + 2] = 255; // blue
-          data[i + 3] = 255; // alpha channel
+          data[i + 3] = 0; // alpha channel
         }
+        console.log(data);
         context.putImageData(imageData, 0, 0);
       }
     }
-  }, []);
+  }, [pixels]);
 
   function uint8torgb(u: Uint8ClampedArray) {
     return `rgba(${u[0]}, ${u[1]}, ${u[2]}, ${u[3]})`;

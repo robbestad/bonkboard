@@ -36,30 +36,45 @@ export function SubmitButton({
   const handleSubmit = async () => {
     if (!wallet?.publicKey || actions.length === 0 || isPending) return;
 
-    setIsPending(true);
+    // setIsPending(true);
 
     let closeCurrentSnackbar: () => void | undefined;
     let tx: Transaction | undefined;
 
     try {
       const data = actions.map((action) => {
-        const [x, y, color] = action[1];
+        const [x, y, color] = action[0];
         return [new BN(x), new BN(y), color] as [BN, BN, Uint8ClampedArray];
       });
-
-      console.log(data);
 
       const feeAccount = findFeeAccount(
         boardProgram.programId,
         new PublicKey(BOARD_ACCOUNT[network])
       )[0];
 
-      // TODO: figure these out
-      const payerTokenAccount = wallet.publicKey;
-      const feeDestination = wallet.publicKey;
+      // console.log({ feeAccount: feeAccount.toString() });
+
+      // TODO: figure this out
+      // find ata of bonk token account
+      const payerTokenAccount = new PublicKey(
+        "3RbReJLzN18SGxCfsAXv9YBEEfVReFgTPGaFWmApngtm"
+      );
+      console.log({ feeAccount: feeAccount.toString() });
+
+      const { feeDestination } = await boardProgram.account.fee.fetch(
+        feeAccount
+      );
+
+      console.log(data[0][2]);
 
       tx = await boardProgram.methods
-        .draw(data[0][0], data[0][1], data[0][2][0])
+        .draw(
+          data[0][0],
+          data[0][1],
+          data[0][2][0],
+          data[0][2][1],
+          data[0][2][2]
+        )
         .accounts({
           boardAccount: BOARD_ACCOUNT[network],
           boardDataAccount: BOARD_DATA_ACCOUNT[network],

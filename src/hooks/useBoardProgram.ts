@@ -18,7 +18,7 @@ export const BOARD_PROGRAM: { [networkName: string]: PublicKey } = {
 export const BOARD_ACCOUNT: { [networkName: string]: Address } = {
   "mainnet-beta": "DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp",
   testnet: "DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp",
-  devnet: "DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp",
+  devnet: "DyQE5BSB22NzGUzqbscVBci2oh5hjRMbHSpznuYjhi5r",
   localnet:
     process.env.NEXT_PUBLIC_BOARD_ACCOUNT_LOCALNET ||
     "DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp",
@@ -28,7 +28,7 @@ export const BOARD_ACCOUNT: { [networkName: string]: Address } = {
 export const BOARD_DATA_ACCOUNT: { [networkName: string]: Address } = {
   "mainnet-beta": "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",
   testnet: "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",
-  devnet: "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",
+  devnet: "GwLmCgymWQPQ3QL2adMgM8ot9DyD3kGJ2MPZ5US9Mqdc",
   localnet:
     process.env.NEXT_PUBLIC_BOARD_DATA_ACCOUNT_LOCALNET ||
     "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",

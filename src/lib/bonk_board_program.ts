@@ -111,7 +111,15 @@ export type BonkBoardProgram = {
           type: "u64";
         },
         {
-          name: "color";
+          name: "r";
+          type: "u8";
+        },
+        {
+          name: "g";
+          type: "u8";
+        },
+        {
+          name: "b";
           type: "u8";
         }
       ];
@@ -125,7 +133,7 @@ export type BonkBoardProgram = {
           isSigner: true;
         },
         {
-          name: "receiver";
+          name: "rentReceiver";
           isMut: true;
           isSigner: false;
         },
@@ -232,7 +240,7 @@ export type BonkBoardProgram = {
           {
             name: "data";
             type: {
-              array: ["u8", 250000];
+              array: ["u8", 750000];
             };
           }
         ];
@@ -391,7 +399,15 @@ export const IDL: BonkBoardProgram = {
           type: "u64",
         },
         {
-          name: "color",
+          name: "r",
+          type: "u8",
+        },
+        {
+          name: "g",
+          type: "u8",
+        },
+        {
+          name: "b",
           type: "u8",
         },
       ],
@@ -405,7 +421,7 @@ export const IDL: BonkBoardProgram = {
           isSigner: true,
         },
         {
-          name: "receiver",
+          name: "rentReceiver",
           isMut: true,
           isSigner: false,
         },
@@ -512,7 +528,7 @@ export const IDL: BonkBoardProgram = {
           {
             name: "data",
             type: {
-              array: ["u8", 250000],
+              array: ["u8", 750000],
             },
           },
         ],
