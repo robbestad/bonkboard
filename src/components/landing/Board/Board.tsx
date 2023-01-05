@@ -49,7 +49,7 @@ export function Board() {
       if (context) {
         const [x, y] = getCursorPosition(e);
         const pixel = context.getImageData(x, y, 1, 1);
-        const newPixel = [x, y, new Uint8ClampedArray(['0', '0', '0', '255'])];
+        const newPixel = [x, y, new Uint8ClampedArray([color.r, color.g, color.b, 255])];
         setActions([...actions, [
           [x, y, pixel.data], 
           newPixel
@@ -165,7 +165,8 @@ export function Board() {
   }
 
   function parse(a: Array) {
-    return a.reduce((acc, val) => `${acc  }\n\n x: ${val[0][0]}, y: ${val[0][1]}: ${val[0][2]} --> ${val[1][2]}`, '')
+    return `Pixels changed: ${a.length}. BONK cost: ${a.length * 10000}`
+    // return a.reduce((acc, val) => `${acc  }\n\n x: ${val[0][0]}, y: ${val[0][1]}: ${val[0][2]} --> ${val[1][2]}`, '')
   }
 
   return (
@@ -213,8 +214,9 @@ export function Board() {
           <Button onClick={(e) => {panDown()}}>Pan Down</Button>
           <Button onClick={() => {undo()}}>Undo</Button>
           <Text>
-            ${parse(actions)}
+            {parse(actions)}
           </Text>
+          <RgbaColorPicker color={color} onChange={setColor} /> 
           <canvas
             // @ts-ignore
             ref={zoomCanvasRef}
