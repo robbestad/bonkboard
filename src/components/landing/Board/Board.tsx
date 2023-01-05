@@ -28,6 +28,16 @@ export function Board() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  // useEffect(() => {
+  //   document.addEventListener('keydown', (event) => {
+  //     if (event.ctrlKey && event.key === 'z') {
+  //       console.log("Undo")
+  //       undo();
+  //     }
+  //   });
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas) {
@@ -296,7 +306,7 @@ export function Board() {
             zoomIn();
           }}
         >
-          Zoom In
+          <img src="icons/Increase.png" />
         </Button>
         <Button
           variant="outline"
@@ -305,7 +315,7 @@ export function Board() {
             zoomOut();
           }}
         >
-          Zoom Out
+          <img src="icons/Reduce.png" />
         </Button>
         <Button
           variant="outline"
@@ -314,7 +324,7 @@ export function Board() {
             panLeft();
           }}
         >
-          Pan Left
+          <img src="icons/Left.png" />
         </Button>
         <Button
           variant="outline"
@@ -323,7 +333,7 @@ export function Board() {
             panRight();
           }}
         >
-          Pan Right
+          <img src="icons/Right.png" />
         </Button>
         <Button
           variant="outline"
@@ -332,7 +342,7 @@ export function Board() {
             panUp();
           }}
         >
-          Pan Up
+          <img src="icons/Up.png" />
         </Button>
         <Button
           variant="outline"
@@ -341,7 +351,7 @@ export function Board() {
             panDown();
           }}
         >
-          Pan Down
+          <img src="icons/Down.png" />
         </Button>
         <Button
           variant="outline"
@@ -350,7 +360,7 @@ export function Board() {
             undo();
           }}
         >
-          Undo
+          <img src="icons/Back.png" />
         </Button>
         <Button variant="outline" size="sm" onClick={() => {}}>
           Refresh Image
@@ -366,6 +376,7 @@ export function Board() {
             }
           }}
         >
+          <img src="icons/Eyedropper.png" />
           Eyedropper Mode
         </Button>
 
