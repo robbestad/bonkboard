@@ -77,10 +77,22 @@ export function Board() {
           color.indexOf(")")
         ).split(", ");
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
-        setActions([...actions, [
-          [x, y, pixel.data], 
-          newPixel
-        ]])
+
+        // Do a very quick and dirty dedupe
+
+        if (actions.length >= 1 && 
+          JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
+          ) {
+          // pass don't do anything
+        }
+
+        else {
+          setActions([...actions, [
+            [x, y, pixel.data], 
+            newPixel
+          ]])
+        }
+
       }
     }
   }
