@@ -12,6 +12,9 @@ export function Board() {
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
+  const [actions, setActions] = useState<Array>([])
+  const [mouseX, setMouseX] = useState<number>(0);
+  const [mouseY, setMouseY] = useState<number>(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -39,18 +42,56 @@ export function Board() {
     }
   }, []);
 
-  function showZoom(e: any) {
+  function paint(e: any) {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const context = canvas.getContext("2d");
+      if (context) {
+        const [x, y] = getCursorPosition(e);
+        const pixel = context.getImageData(x, y, 1, 1);
+        const newPixel = [x, y, new Uint8ClampedArray(['0', '0', '0', '255'])];
+        setActions([...actions, [
+          [x, y, pixel.data], 
+          newPixel
+        ]])
+      }
+    }
+  }
+
+  // Update Canvas every time a pixel is changed
+  useEffect(() => {
+    function paintOnCanvas(){
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        if (context) {
+          actions.forEach((action) => {
+            const lastAction = action[1]
+            context.fillStyle = `rgba(${lastAction[2][0]}, ${lastAction[2][1]}, ${lastAction[2][2]}, ${lastAction[2][3] / 255})`
+            context?.fillRect(lastAction[0], lastAction[1], 1, 1);
+          })
+        }
+      }
+    }
+
+    paintOnCanvas()
+  }, [actions])
+
+
+  // Update Zoom view everytime a pixel is changed or the mouse moves
+  // FIXME this is not working
+  useEffect(() => {
+  function paintOnZoomCanvas() {
     const canvas = canvasRef.current;
     const zoomCanvas = zoomCanvasRef.current;
-    const [x, y] = getCursorPosition(e);
     if (canvas && zoomCanvas) {
       const zoomContext = zoomCanvas.getContext("2d");
       if (zoomContext) {
         zoomContext.imageSmoothingEnabled = false;
         zoomContext.drawImage(
           canvas,
-          Math.min(Math.max(0, x - 5), CANVAS_SIZE.width - 10),
-          Math.min(Math.max(0, y - 5), CANVAS_SIZE.height - 10),
+          Math.min(Math.max(0, mouseX - 5), CANVAS_SIZE.width - 10),
+          Math.min(Math.max(0, mouseY - 5), CANVAS_SIZE.height - 10),
           11,
           11,
           0,
@@ -64,15 +105,20 @@ export function Board() {
       }
     }
   }
+    paintOnZoomCanvas();
+  }, [mouseX, mouseY, actions])
 
-  function paint(e: any) {
+
+  function undo() {
     const canvas = canvasRef.current;
     if (canvas) {
       const context = canvas.getContext("2d");
       if (context) {
-        const [x, y] = getCursorPosition(e);
-        context.fillStyle = "black";
+        const [x, y, prevColour] = actions[actions.length-1][0]
+        context.fillStyle = `rgba(${prevColour[0]}, ${prevColour[1]}, ${prevColour[2]}, ${prevColour[3] / 255})`
         context?.fillRect(x, y, 1, 1);
+        // Pop out the last element of the array
+        setActions(actions.slice(0, -1))
       }
     }
   }
@@ -118,6 +164,10 @@ export function Board() {
     setTranslateY(translateY - 40)
   }
 
+  function parse(a: Array) {
+    return a.reduce((acc, val) => `${acc  }\n\n x: ${val[0][0]}, y: ${val[0][1]}: ${val[0][2]} --> ${val[1][2]}`, '')
+  }
+
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
 
@@ -143,23 +193,28 @@ export function Board() {
                 transform: `scale(${scale})`,
               }}
               onMouseMove={(e) => {
-                showZoom(e);
+                const [x, y] = getCursorPosition(e);
+                setMouseX(x);
+                setMouseY(y);
               }}
               onClick={(e) => {
                 paint(e);
-                showZoom(e);
               }}
             />
           </div>
         </div>
 
         <div>
-          <Button onClick={(e) => {zoomIn(); showZoom(e);}}>Zoom In</Button>
-          <Button onClick={(e) => {zoomOut(); showZoom(e);}}>Zoom Out</Button>
-          <Button onClick={(e) => {panLeft(); showZoom(e);}}>Pan Left</Button>
-          <Button onClick={(e) => {panRight(); showZoom(e);}}>Pan Right</Button>
-          <Button onClick={(e) => {panUp(); showZoom(e);}}>Pan Up</Button>
-          <Button onClick={(e) => {panDown(); showZoom(e);}}>Pan Down</Button>
+          <Button onClick={(e) => {zoomIn()}}>Zoom In</Button>
+          <Button onClick={(e) => {zoomOut()}}>Zoom Out</Button>
+          <Button onClick={(e) => {panLeft()}}>Pan Left</Button>
+          <Button onClick={(e) => {panRight()}}>Pan Right</Button>
+          <Button onClick={(e) => {panUp()}}>Pan Up</Button>
+          <Button onClick={(e) => {panDown()}}>Pan Down</Button>
+          <Button onClick={() => {undo()}}>Undo</Button>
+          <Text>
+            ${parse(actions)}
+          </Text>
           <canvas
             // @ts-ignore
             ref={zoomCanvasRef}
