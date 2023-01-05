@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
+import { RgbInput } from "@/components/landing/Board/RgbInput";
+import { useImage } from "@/hooks/useImage";
+import { getColorStr, getRgb } from "@/utils/color";
+
 const CANVAS_SIZE = {
   width: 500,
   height: 500,
@@ -13,7 +17,7 @@ const ZOOM_CANVAS_SIZE = {
 };
 
 export function Board() {
-  const [color, setColor] = useState<string>("rgb(0, 0, 0)");
+  const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
@@ -51,18 +55,19 @@ export function Board() {
         );
         const { data } = imageData;
         for (let i = 0; i < data.length; i += 4) {
-          data[i] = 255; // red
-          data[i + 1] = 255; // green
-          data[i + 2] = 255; // blue
+          const j = (3 * i) / 4;
+          data[i] = imageArr[j]; // red
+          data[i + 1] = imageArr[j + 1]; // green
+          data[i + 2] = imageArr[j + 2]; // blue
           data[i + 3] = 255; // alpha channel
         }
         context.putImageData(imageData, 0, 0);
       }
     }
-  }, []);
+  }, [imageArr]);
 
   function uint8torgb(u: Uint8ClampedArray) {
-    return `rgb(${u[0]}, ${u[1]}, ${u[2]})`;
+    return getColorStr(u[0], u[1], u[2]);
   }
 
   function performActionOnCanvas(e: any) {
@@ -89,9 +94,7 @@ export function Board() {
       if (context) {
         const [x, y] = getCursorPosition(e);
         const pixel = context.getImageData(x, y, 1, 1);
-        const [r, g, b] = color
-          .slice(color.indexOf("(") + 1, color.indexOf(")"))
-          .split(", ");
+        const [r, g, b] = getRgb(color);
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
 
@@ -130,7 +133,11 @@ export function Board() {
         if (context) {
           actions.forEach((action) => {
             const lastAction = action[1];
-            context.fillStyle = `rgb(${lastAction[2][0]}, ${lastAction[2][1]}, ${lastAction[2][2]})`;
+            context.fillStyle = getColorStr(
+              lastAction[2][0],
+              lastAction[2][1],
+              lastAction[2][2]
+            );
             context?.fillRect(lastAction[0], lastAction[1], 1, 1);
           });
         }
@@ -181,7 +188,11 @@ export function Board() {
       const context = canvas.getContext("2d");
       if (context) {
         const [x, y, prevColour] = actions[actions.length - 1][0];
-        context.fillStyle = `rgb(${prevColour[0]}, ${prevColour[1]}, ${prevColour[2]})`;
+        context.fillStyle = getColorStr(
+          prevColour[0],
+          prevColour[1],
+          prevColour[2]
+        );
         context?.fillRect(x, y, 1, 1);
         // Pop out the last element of the array
 
@@ -362,7 +373,7 @@ export function Board() {
         >
           <img src="icons/Back.png" />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => {}}>
+        <Button variant="outline" size="sm" onClick={() => fetchImage()}>
           Refresh Image
         </Button>
         <Button
@@ -385,7 +396,7 @@ export function Board() {
         </Button>
         <Text>{parse()}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
-        <input type="text" value={color} />
+        <RgbInput color={color} setColor={setColor} />
         <canvas
           // @ts-ignore
           ref={zoomCanvasRef}
@@ -394,7 +405,6 @@ export function Board() {
           style={{
             imageRendering: "pixelated",
             border: "1px solid black",
-            transform: "scale(1)",
           }}
         />
       </GridItem>
