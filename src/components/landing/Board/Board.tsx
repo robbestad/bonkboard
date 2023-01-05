@@ -179,7 +179,7 @@ export function Board() {
 
       <Grid templateColumns="3fr 1fr" gap={10} minHeight="100%">
 
-        <GridItem backgroundColor="rgba(255,198,133)">
+        <GridItem backgroundColor="rgba(255,230,220)">
           <div
             style = {{
               translate: `${translateX}px ${translateY}px`,
