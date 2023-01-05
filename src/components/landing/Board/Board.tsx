@@ -8,7 +8,7 @@ const CANVAS_SIZE = {
 };
 
 export function Board() {
-  const [color, setColor] = useState<string>("rgba(0,0,0,1)");
+  const [color, setColor] = useState<string>("rgb(0, 0, 0)");
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
@@ -44,7 +44,7 @@ export function Board() {
   }, []);
 
   function uint8torgb(u: Uint8ClampedArray) {
-    return `rgba(${u[0]}, ${u[1]}, ${u[2]}, ${u[3]})`;
+    return `rgb(${u[0]}, ${u[1]}, ${u[2]})`;
   }
 
   function performActionOnCanvas(e: any) {
@@ -90,9 +90,7 @@ export function Board() {
         if (context) {
           actions.forEach((action) => {
             const lastAction = action[1];
-            context.fillStyle = `rgba(${lastAction[2][0]}, ${
-              lastAction[2][1]
-            }, ${lastAction[2][2]}, ${lastAction[2][3] / 255})`;
+            context.fillStyle = `rgb(${lastAction[2][0]}, ${lastAction[2][1]}, ${lastAction[2][2]})`;
             context?.fillRect(lastAction[0], lastAction[1], 1, 1);
           });
         }
@@ -134,18 +132,14 @@ export function Board() {
 
   function undo() {
     const canvas = canvasRef.current;
-    if (canvas) {
+    if (canvas && actionMode.length > 0) {
       const context = canvas.getContext("2d");
       if (context) {
         const [x, y, prevColour] = actions[actions.length - 1][0];
-        context.fillStyle = `rgba(${prevColour[0]}, ${prevColour[1]}, ${
-          prevColour[2]
-        }, ${prevColour[3] / 255})`;
+        context.fillStyle = `rgb(${prevColour[0]}, ${prevColour[1]}, ${prevColour[2]})`;
         context?.fillRect(x, y, 1, 1);
         // Pop out the last element of the array
-        if (actions.length > 0) {
-          setActions(actions.slice(0, -1));
-        }
+        setActions(actions.slice(0, -1));
       }
     }
   }
@@ -200,7 +194,13 @@ export function Board() {
     // <Flex direction="column" align="center" justify="center" gap={8}>
 
     <Grid templateColumns="3fr 1fr" gap={10} minHeight="100%">
-      <GridItem backgroundColor="rgba(255,230,220)">
+      <GridItem
+        backgroundColor="rgb(255,230,220)"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        overflow="hidden"
+      >
         <div
           style={{
             translate: `${translateX}px ${translateY}px`,
