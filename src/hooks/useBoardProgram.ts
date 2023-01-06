@@ -8,7 +8,7 @@ import { BonkBoardProgram, IDL } from "@/lib/bonk_board_program";
 
 // TODO: update!!!
 export const BOARD_PROGRAM: { [networkName: string]: PublicKey } = {
-  "mainnet-beta": new PublicKey("GG26rKD3RoP2dDcEufYUoNvVzkh1eYRpiF4p5SVC1bni"),
+  "mainnet-beta": new PublicKey("bbggT3MZKdJ2cgHQpfSZJFvKHrvAm3NHSqxHq2zoe7A"),
   testnet: new PublicKey("GG26rKD3RoP2dDcEufYUoNvVzkh1eYRpiF4p5SVC1bni"),
   devnet: new PublicKey("ALz1fjGZ2YeBdD5dJLo3HRTWcs7fAZzHxqsyz28fVGA9"),
   localnet: new PublicKey("GG26rKD3RoP2dDcEufYUoNvVzkh1eYRpiF4p5SVC1bni"),

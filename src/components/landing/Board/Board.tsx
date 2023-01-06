@@ -19,7 +19,7 @@ const ZOOM_CANVAS_SIZE = {
   height: 400,
 };
 
-const MAX_PIXELS = 130;
+const MAX_PIXELS = 110;
 
 // Count all the non-zero values of keys in o
 // Used to count the number of unique changed pixels
@@ -150,7 +150,7 @@ export function Board() {
             const tmp = prev;
 
             // @ts-ignore
-            if (tmp[[x, y]]) {
+            if ([x, y] in tmp) {
               // @ts-ignore
               tmp[[x, y]] += 1;
             } else {
@@ -244,7 +244,7 @@ export function Board() {
           // @ts-ignore
           if ([x, y] in tmp) {
             // @ts-ignore
-            tmp[[x, y]] = Math.max(tmp[[x, y]] - 1, 0);
+            tmp[[x, y]] -= 1;
           } else {
             // @ts-ignore
             tmp[[x, y]] = 0;
