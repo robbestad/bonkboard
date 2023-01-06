@@ -16,7 +16,7 @@ export const BOARD_PROGRAM: { [networkName: string]: PublicKey } = {
 
 // TODO: update!!!
 export const BOARD_ACCOUNT: { [networkName: string]: Address } = {
-  "mainnet-beta": "DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp",
+  "mainnet-beta": "2857efXBFxFnN96NMdZue8ZR4E4L1ca7bFCxpiAdqPS1",
   testnet: "DREm2VkXSRPoQEgUJJagekoZsmWQ29wA4cLNPBQMzsjp",
   devnet: "DyQE5BSB22NzGUzqbscVBci2oh5hjRMbHSpznuYjhi5r",
   localnet:
@@ -26,7 +26,7 @@ export const BOARD_ACCOUNT: { [networkName: string]: Address } = {
 
 // TODO: update!!!
 export const BOARD_DATA_ACCOUNT: { [networkName: string]: Address } = {
-  "mainnet-beta": "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",
+  "mainnet-beta": "RQp1MWHb9ppSCHBgKPvdCauXCBiWfD7XQRD4GvoaB42",
   testnet: "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",
   devnet: "GwLmCgymWQPQ3QL2adMgM8ot9DyD3kGJ2MPZ5US9Mqdc",
   localnet:
