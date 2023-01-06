@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
@@ -21,6 +21,18 @@ const ZOOM_CANVAS_SIZE = {
 
 const MAX_PIXELS = 23;
 
+// Count all the non-zero values of keys in o
+// Used to count the number of unique changed pixels
+function pixelsChanged(o: { [k: string]: number }) {
+  return Object.keys(o).reduce((acc, key) => acc + Number(o[key] > 0), 0);
+}
+
+function parse(pixelsChangedNumber: number) {
+  return `Pixels changed: ${pixelsChangedNumber}. BONK cost: ${
+    pixelsChangedNumber * 10000
+  }`;
+}
+
 export function Board() {
   const [isPending, setIsPending] = useState(false);
 
@@ -42,6 +54,11 @@ export function Board() {
   const { pixels, error, mutate } = useBoardPixels();
 
   const { enqueueSnackbar } = useSnackbarContext();
+
+  const pixelsChangedNumber = useMemo(
+    () => pixelsChanged(pixelsTouched),
+    [pixelsTouched]
+  );
 
   // useEffect(() => {
   //   document.addEventListener('keydown', (event) => {
@@ -111,7 +128,7 @@ export function Board() {
   }
 
   function paint(e: any) {
-    if (Object.keys(pixelsTouched).length >= MAX_PIXELS) return;
+    if (pixelsChangedNumber >= MAX_PIXELS) return;
 
     const canvas = canvasRef.current;
     if (canvas) {
@@ -272,18 +289,6 @@ export function Board() {
 
   function panDown() {
     setTranslateY(translateY - 40);
-  }
-
-  // Count all the non-zero values of keys in o
-  // Used to count the number of unique changed pixels
-  function pixelsChanged(o: { [k: string]: number }) {
-    return Object.keys(o).reduce((acc, key) => acc + Number(o[key] > 0), 0);
-  }
-
-  function parse() {
-    return `Pixels changed: ${pixelsChanged(pixelsTouched)}. BONK cost: ${
-      pixelsChanged(pixelsTouched) * 10000
-    }`;
   }
 
   function resetDrawnPixels() {
@@ -477,7 +482,7 @@ export function Board() {
           setIsPending={setIsPending}
           resetDrawnPixels={() => resetDrawnPixels()}
         />
-        <Text>{parse()}</Text>
+        <Text>{parse(pixelsChangedNumber)}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
         <RgbInput color={color} setColor={setColor} />
         <canvas
