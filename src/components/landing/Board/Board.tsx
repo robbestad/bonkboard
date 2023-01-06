@@ -135,31 +135,54 @@ export function Board() {
         const pixel = context.getImageData(x, y, 1, 1);
         const [r, g, b] = getRgb(color);
         // @ts-ignore
-        const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
+        const newPixel: [number, number, Uint8ClampedArray] = [
+          x,
+          y,
+          new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
+        ];
+
+        const lastAction =
+          actions.length >= 1 && actions[actions.length - 1][0];
+        const isSameColorPainted =
+          actions.length >= 1 &&
+          lastAction[0] === newPixel[0] &&
+          lastAction[1] === newPixel[1] &&
+          lastAction[2][0] === newPixel[2][0] &&
+          lastAction[2][1] === newPixel[2][1] &&
+          lastAction[2][2] === newPixel[2][2];
 
         // Do a very quick and dirty dedupe
-        if (
-          actions.length >= 1 &&
-          JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
-        ) {
+        if (isSameColorPainted) {
           // pass don't do anything
         } else {
-          setActions([...actions, [[x, y, pixel.data], newPixel]]);
+          const newActions = [...actions, [[x, y, pixel.data], newPixel]];
+          const newActionsNoDupes = newActions.filter(
+            (action) =>
+              newActions.filter(
+                (_action) =>
+                  _action[0][0] === action[0][0] &&
+                  _action[0][1] === action[0][1]
+              ).length <= 1
+          );
 
-          setPixelsTouched((prev) => {
-            const tmp = prev;
+          if (newActionsNoDupes.length > actions.length) {
+            setActions(newActionsNoDupes);
 
-            // @ts-ignore
-            if ([x, y] in tmp) {
+            setPixelsTouched((prev) => {
+              const tmp = prev;
+
               // @ts-ignore
-              tmp[[x, y]] += 1;
-            } else {
-              // @ts-ignore
-              tmp[[x, y]] = 1;
-            }
+              if ([x, y] in tmp) {
+                // @ts-ignore
+                tmp[[x, y]] += 1;
+              } else {
+                // @ts-ignore
+                tmp[[x, y]] = 1;
+              }
 
-            return tmp;
-          });
+              return tmp;
+            });
+          }
         }
       }
     }
