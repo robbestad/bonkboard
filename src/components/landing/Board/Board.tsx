@@ -141,50 +141,25 @@ export function Board() {
           new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
         ];
 
-        const lastAction =
-          actions.length >= 1 && actions[actions.length - 1][0];
-        const isSameColorPainted =
-          actions.length >= 1 &&
-          lastAction[0] === newPixel[0] &&
-          lastAction[1] === newPixel[1] &&
-          lastAction[2][0] === newPixel[2][0] &&
-          lastAction[2][1] === newPixel[2][1] &&
-          lastAction[2][2] === newPixel[2][2];
+        const newAction = [[x, y, pixel.data], newPixel];
+        const newActions = [...actions, newAction];
 
-        // Do a very quick and dirty dedupe
-        if (isSameColorPainted) {
-          // pass don't do anything
-        } else {
-          const isDupAction = actions.find((action) => {
-            const [x1, y1, [r1, g1, b1]] = action[1];
-            const [x2, y2, [r2, g2, b2]] = newPixel;
-            return (
-              x1 === x2 && y1 === y2 && r1 === r2 && g1 === g2 && b1 === b2
-            );
-          });
+        setActions(newActions);
 
-          if (!isDupAction) {
-            const newAction = [[x, y, pixel.data], newPixel];
-            const newActions = [...actions, newAction];
+        setPixelsTouched((prev) => {
+          const tmp = prev;
 
-            setActions(newActions);
-
-            setPixelsTouched((prev) => {
-              const tmp = prev;
-
-              // @ts-ignore
-              if ([x, y] in tmp) {
-                // @ts-ignore
-                tmp[[x, y]] += 1;
-              } else {
-                // @ts-ignore
-                tmp[[x, y]] = 1;
-              }
-
-              return tmp;
-            });
+          // @ts-ignore
+          if ([x, y] in tmp) {
+            // @ts-ignore
+            tmp[[x, y]] += 1;
+          } else {
+            // @ts-ignore
+            tmp[[x, y]] = 1;
           }
-        }
+
+          return tmp;
+        });
       }
     }
   }
@@ -259,8 +234,8 @@ export function Board() {
           prevColour[2]
         );
         context?.fillRect(x, y, 1, 1);
-        // Pop out the last element of the array
 
+        // Pop out the last element of the array
         setActions(actions.slice(0, -1));
 
         setPixelsTouched((prev) => {
@@ -360,9 +335,6 @@ export function Board() {
               const [x, y] = getCursorPosition(e);
               setMouseX(x);
               setMouseY(y);
-              if (e.buttons === 1) {
-                paint(e);
-              }
             }}
             onClick={(e) => {
               performActionOnCanvas(e);
