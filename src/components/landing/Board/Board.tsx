@@ -19,7 +19,7 @@ const ZOOM_CANVAS_SIZE = {
   height: 400,
 };
 
-const MAX_PIXELS = 110;
+const MAX_PIXELS = 100;
 
 // Count all the non-zero values of keys in o
 // Used to count the number of unique changed pixels
@@ -28,7 +28,7 @@ function pixelsChanged(o: { [k: string]: number }) {
 }
 
 function parse(pixelsChangedNumber: number) {
-  return `Pixels changed: ${pixelsChangedNumber}. BONK cost: ${
+  return `Pixels changed: ${pixelsChangedNumber}/${MAX_PIXELS}. BONK cost: ${
     pixelsChangedNumber * 10000
   }`;
 }
