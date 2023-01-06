@@ -103,15 +103,11 @@ export type BonkBoardProgram = {
       ];
       args: [
         {
-          name: "coord";
+          name: "pixels";
           type: {
-            defined: "Coord";
-          };
-        },
-        {
-          name: "color";
-          type: {
-            defined: "Color";
+            vec: {
+              defined: "Pixel";
+            };
           };
         }
       ];
@@ -295,6 +291,26 @@ export type BonkBoardProgram = {
           }
         ];
       };
+    },
+    {
+      name: "Pixel";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "coord";
+            type: {
+              defined: "Coord";
+            };
+          },
+          {
+            name: "color";
+            type: {
+              defined: "Color";
+            };
+          }
+        ];
+      };
     }
   ];
   errors: [
@@ -436,15 +452,11 @@ export const IDL: BonkBoardProgram = {
       ],
       args: [
         {
-          name: "coord",
+          name: "pixels",
           type: {
-            defined: "Coord",
-          },
-        },
-        {
-          name: "color",
-          type: {
-            defined: "Color",
+            vec: {
+              defined: "Pixel",
+            },
           },
         },
       ],
@@ -625,6 +637,26 @@ export const IDL: BonkBoardProgram = {
           {
             name: "b",
             type: "u8",
+          },
+        ],
+      },
+    },
+    {
+      name: "Pixel",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "coord",
+            type: {
+              defined: "Coord",
+            },
+          },
+          {
+            name: "color",
+            type: {
+              defined: "Color",
+            },
           },
         ],
       },

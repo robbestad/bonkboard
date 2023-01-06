@@ -15,7 +15,9 @@ export function ConnectionSelector() {
   const { cluster, setCluster } = useSolana();
 
   const clusters = isProduction
-    ? CLUSTERS.filter((c) => c.network === MAINNET_NETWORK)
+    ? CLUSTERS.filter(
+        (c) => c.network === MAINNET_NETWORK || c.network === "devnet"
+      )
     : CLUSTERS;
 
   return (

@@ -1,11 +1,7 @@
 import { Button } from "@chakra-ui/react";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import {
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
 
 import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
@@ -64,11 +60,14 @@ export function SubmitButton({
         tmp[[action[0], action[1]]] = [r, g, b];
       });
 
-      const toSend: { x: BN; y: BN; r: number; g: number; b: number }[] = [];
+      const toSend: {
+        coord: { x: BN; y: BN };
+        color: { r: number; g: number; b: number };
+      }[] = [];
       Object.entries(tmp).forEach(([key, value]) => {
         const [x, y] = key.split(",").map((num) => new BN(num));
         const [r, g, b] = value;
-        toSend.push({ x, y, r, g, b });
+        toSend.push({ coord: { x, y }, color: { r, g, b } });
       });
 
       const feeAccount = findFeeAccount(
@@ -85,26 +84,17 @@ export function SubmitButton({
         feeAccount
       );
 
-      const ixs: TransactionInstruction[] = [];
-
-      for (const { x, y, r, g, b } of toSend) {
-        // eslint-disable-next-line no-await-in-loop
-        const ix = await boardProgram.methods
-          .draw({ x, y }, { r, g, b })
-          .accounts({
-            boardAccount: BOARD_ACCOUNT[network],
-            boardDataAccount: BOARD_DATA_ACCOUNT[network],
-            payer: wallet.publicKey,
-            payerTokenAccount,
-            feeAccount,
-            feeDestination,
-          })
-          .instruction();
-
-        ixs.push(ix);
-      }
-
-      tx = new Transaction().add(...ixs);
+      tx = await boardProgram.methods
+        .draw(toSend)
+        .accounts({
+          boardAccount: BOARD_ACCOUNT[network],
+          boardDataAccount: BOARD_DATA_ACCOUNT[network],
+          payer: wallet.publicKey,
+          payerTokenAccount,
+          feeAccount,
+          feeDestination,
+        })
+        .transaction();
 
       const { close: closeProgressSnackbar } = enqueueSnackbar({
         title: "Bonk in progress",
@@ -162,6 +152,7 @@ export function SubmitButton({
           duration: null,
         },
       });
+      console.error(err);
     } finally {
       // @ts-ignore
       if (closeCurrentSnackbar) {
