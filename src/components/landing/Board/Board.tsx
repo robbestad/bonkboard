@@ -135,13 +135,7 @@ export function Board() {
           setPixelsTouched((prev) => {
             const tmp = prev;
             // @ts-ignore
-            if ([x, y] in tmp) {
-              // @ts-ignore
-              tmp[[x, y]] = tmp[[x, y]] + 1;
-            } else {
-              // @ts-ignore
-              tmp[[x, y]] = 1;
-            }
+            tmp[[x, y]] = 1;
             return tmp;
           });
         }
