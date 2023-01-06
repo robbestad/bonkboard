@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
+import { assert } from "console";
 
 import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
@@ -81,7 +82,7 @@ export function Board() {
           CANVAS_SIZE.width,
           CANVAS_SIZE.height
         );
-        console.log(pixels);
+        // console.log(pixels);
         const { data } = imageData;
         for (let i = 0; i < data.length; i += 4) {
           const j = (3 * i) / 4;
@@ -90,40 +91,28 @@ export function Board() {
           data[i + 2] = pixels[j + 2]; // blue
           data[i + 3] = 255; // alpha channel
         }
-        console.log(data);
+        // console.log(data);
         context.putImageData(imageData, 0, 0);
+
+        console.log(`Actions array length: ${actions.length}`)
+        actions.forEach((action) => {
+          Object.keys(action).forEach((key) => {
+            const pixel = action[key]
+            context.fillStyle = getColorStr(
+              pixel[2][0],
+              pixel[2][1],
+              pixel[2][2],
+            );
+            context.fillRect(pixel[0], pixel[1], 1, 1);
+          })
+        });
       }
     }
-  }, [pixels]);
+  }, [actions, pixels]);
 
   function uint8torgb(u: Uint8ClampedArray) {
     return getColorStr(u[0], u[1], u[2]);
   }
-
-  // Update Canvas every time a pixel is changed
-  useEffect(() => {
-    function paintOnCanvas() {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const context = canvas.getContext("2d");
-        if (context) {
-          actions.forEach((action) => {
-            Object.keys(action).forEach((key) => {
-              const pixel = action[key]
-              context.fillStyle = getColorStr(
-                pixel[2][0],
-                pixel[2][1],
-                pixel[2][2],
-              );
-              context.fillRect(pixel[0], pixel[1], 1, 1);
-            })
-          });
-        }
-      }
-    }
-
-    paintOnCanvas();
-  }, [actions, pixels]);
 
   // Updates the drawbuffer when the mouse moves if the current actionMode is draw
   useEffect(() => {
@@ -142,7 +131,6 @@ export function Board() {
 
           setdrawBuffer((prev) => {
             const tmp = {...prev, [[mouseX, mouseY]] : newPixel}
-            console.log(Object.keys(prev), Object.keys(tmp))
             return tmp
           })
       }
@@ -180,8 +168,23 @@ export function Board() {
   useEffect(() => {
     if (actionMode === "normal") {
       console.log("Action mode normal")
-      console.log(drawBuffer)
       setActions((prev) => [...prev, drawBuffer])
+
+      // Set pixels touched so we can impose pixel change limit
+      setPixelsTouched((prev) => {
+        const tmp = {...prev}
+        Object.keys(drawBuffer).forEach((key) => {
+          if (key in tmp) {
+            tmp[key] += 1
+          }
+          else {
+            tmp[key] = 1
+          }
+        })
+        console.log(tmp)
+        return tmp
+      })
+
       setdrawBuffer([])
     }
     else if (actionMode === "draw") {
@@ -235,34 +238,28 @@ export function Board() {
     paintOnZoomCanvas();
   }, [mouseX, mouseY, actions]);
 
+  // Undo function
   function undo() {
     const canvas = canvasRef.current;
     if (canvas && actions.length > 0) {
       const context = canvas.getContext("2d");
       if (context) {
-        const [x, y, prevColour] = actions[actions.length - 1][0];
-        context.fillStyle = getColorStr(
-          prevColour[0],
-          prevColour[1],
-          prevColour[2]
-        );
-        context?.fillRect(x, y, 1, 1);
-
         // Pop out the last element of the array
-        setActions(actions.slice(0, -1));
 
         setPixelsTouched((prev) => {
-          const tmp = prev;
-          // @ts-ignore
-          if ([x, y] in tmp) {
-            // @ts-ignore
-            tmp[[x, y]] -= 1;
-          } else {
-            // @ts-ignore
-            tmp[[x, y]] = 0;
-          }
-          return tmp;
-        });
+          const tmp = {...prev}
+          console.log(actions)
+          console.log(actions.slice(-1)[0])
+          Object.keys(actions.slice(-1)[0]).forEach((key) => {
+            // key should always be in setPixelsTouched
+            console.log(key)
+            tmp[key] -= 1
+          })
+          console.log(tmp)
+          return tmp
+        })
+
+        setActions(actions.slice(0, -1));
       }
     }
   }
