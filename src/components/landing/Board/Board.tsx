@@ -111,7 +111,7 @@ export function Board() {
   }
 
   function paint(e: any) {
-    if (pixelsTouched.length >= MAX_PIXELS) return;
+    if (Object.keys(pixelsTouched).length >= MAX_PIXELS) return;
 
     const canvas = canvasRef.current;
     if (canvas) {
