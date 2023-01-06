@@ -1,4 +1,5 @@
 import { Button } from "@chakra-ui/react";
+import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import BN from "bn.js";
@@ -6,7 +7,11 @@ import BN from "bn.js";
 import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useSolana } from "@/contexts/SolanaContext";
-import { BOARD_ACCOUNT, BOARD_DATA_ACCOUNT } from "@/hooks/useBoardProgram";
+import {
+  BOARD_ACCOUNT,
+  BOARD_DATA_ACCOUNT,
+  MINT_TOKEN_ACCOUNT,
+} from "@/hooks/useBoardProgram";
 import { txToSimulationLink, txToSolanaFMLink } from "@/utils/links";
 import { findFeeAccount } from "@/utils/token";
 import { signSendConfirm } from "@/utils/transaction";
@@ -36,14 +41,14 @@ export function SubmitButton({
   const handleSubmit = async () => {
     if (!wallet?.publicKey || actions.length === 0 || isPending) return;
 
-    // setIsPending(true);
+    setIsPending(true);
 
     let closeCurrentSnackbar: () => void | undefined;
     let tx: Transaction | undefined;
 
     try {
       const data = actions.map((action) => {
-        const [x, y, color] = action[0];
+        const [x, y, color] = action[1];
         return [new BN(x), new BN(y), color] as [BN, BN, Uint8ClampedArray];
       });
 
@@ -52,29 +57,20 @@ export function SubmitButton({
         new PublicKey(BOARD_ACCOUNT[network])
       )[0];
 
-      // console.log({ feeAccount: feeAccount.toString() });
-
-      // TODO: figure this out
-      // find ata of bonk token account
-      const payerTokenAccount = new PublicKey(
-        "3RbReJLzN18SGxCfsAXv9YBEEfVReFgTPGaFWmApngtm"
+      const payerTokenAccount = await getAssociatedTokenAddress(
+        MINT_TOKEN_ACCOUNT[network],
+        wallet.publicKey
       );
-      console.log({ feeAccount: feeAccount.toString() });
 
       const { feeDestination } = await boardProgram.account.fee.fetch(
         feeAccount
       );
 
-      console.log(data[0][2]);
+      const [x, y, color] = data[0];
+      const [r, g, b] = color;
 
       tx = await boardProgram.methods
-        .draw(
-          data[0][0],
-          data[0][1],
-          data[0][2][0],
-          data[0][2][1],
-          data[0][2][2]
-        )
+        .draw(x, y, r, g, b)
         .accounts({
           boardAccount: BOARD_ACCOUNT[network],
           boardDataAccount: BOARD_DATA_ACCOUNT[network],
@@ -107,7 +103,7 @@ export function SubmitButton({
 
       enqueueSnackbar({
         title: "Success",
-        description: "Successfully done something",
+        description: "Successfully bonked a pixel!",
         variant: "success",
         links: [
           {

@@ -34,6 +34,17 @@ export const BOARD_DATA_ACCOUNT: { [networkName: string]: Address } = {
     "EL1435o4t9cCc8yWRiizKjz4Ln8NnWuYkpF9g2gkTdzr",
 };
 
+// TODO: update!!!
+export const MINT_TOKEN_ACCOUNT: { [networkName: string]: PublicKey } = {
+  "mainnet-beta": new PublicKey("DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"),
+  testnet: new PublicKey("CHzTQ8ZsVTR5jcRHSyVdRuzA8J9ireiEjB28qFAiFUQn"),
+  devnet: new PublicKey("CHzTQ8ZsVTR5jcRHSyVdRuzA8J9ireiEjB28qFAiFUQn"),
+  localnet: new PublicKey(
+    process.env.NEXT_PUBLIC_MINT_TOKEN_ACCOUNT_LOCALNET ||
+      "CHzTQ8ZsVTR5jcRHSyVdRuzA8J9ireiEjB28qFAiFUQn"
+  ),
+};
+
 /**
  * NOTE: program.provider DOES NOT HAVE WALLET CONNECTED
  * DO NOT USE ANY .rpc CALLS WITH IT

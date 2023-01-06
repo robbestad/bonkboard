@@ -1,19 +1,28 @@
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
+import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
+import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useBoardPixels } from "@/hooks/useBoardPixels";
+import { getColorStr, getRgb } from "@/utils/color";
 
 const CANVAS_SIZE = {
   width: 500,
   height: 500,
 };
 
+const ZOOM_CANVAS_SIZE = {
+  width: 400,
+  height: 400,
+};
+
 export function Board() {
   const [isPending, setIsPending] = useState(false);
 
-  const [color, setColor] = useState<string>("rgba(0,0,0,1)");
+  const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
@@ -21,11 +30,36 @@ export function Board() {
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
   const [actionMode, setActionMode] = useState<string>("normal");
+  const [pixelsTouched, setPixelsTouched] = useState<{ [key: string]: number }>(
+    {}
+  );
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { pixels } = useBoardPixels();
+  const { pixels, error, mutate } = useBoardPixels();
+
+  const { enqueueSnackbar } = useSnackbarContext();
+
+  // useEffect(() => {
+  //   document.addEventListener('keydown', (event) => {
+  //     if (event.ctrlKey && event.key === 'z') {
+  //       console.log("Undo")
+  //       undo();
+  //     }
+  //   });
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [])
+
+  useEffect(() => {
+    if (error) {
+      enqueueSnackbar({
+        title: "Error loading pixels",
+        description: error.message,
+        variant: "critical",
+      });
+    }
+  }, [enqueueSnackbar, error]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -40,11 +74,12 @@ export function Board() {
         );
         console.log(pixels);
         const { data } = imageData;
-        for (let i = 0; i < pixels.length; i += 3) {
-          data[i] = 255; // red
-          data[i + 1] = 255; // green
-          data[i + 2] = 255; // blue
-          data[i + 3] = 0; // alpha channel
+        for (let i = 0; i < pixels.length; i += 4) {
+          const j = (3 * i) / 4;
+          data[i] = pixels[j]; // red
+          data[i + 1] = pixels[j + 1]; // green
+          data[i + 2] = pixels[j + 2]; // blue
+          data[i + 3] = 255; // alpha channel
         }
         console.log(data);
         context.putImageData(imageData, 0, 0);
@@ -53,7 +88,7 @@ export function Board() {
   }, [pixels]);
 
   function uint8torgb(u: Uint8ClampedArray) {
-    return `rgba(${u[0]}, ${u[1]}, ${u[2]}, ${u[3]})`;
+    return getColorStr(u[0], u[1], u[2]);
   }
 
   function performActionOnCanvas(e: any) {
@@ -80,12 +115,32 @@ export function Board() {
       if (context) {
         const [x, y] = getCursorPosition(e);
         const pixel = context.getImageData(x, y, 1, 1);
-        const [r, g, b] = color
-          .slice(color.indexOf("(") + 1, color.indexOf(")"))
-          .split(", ");
+        const [r, g, b] = getRgb(color);
         // @ts-ignore
         const newPixel = [x, y, new Uint8ClampedArray([r, g, b, 255])];
-        setActions([...actions, [[x, y, pixel.data], newPixel]]);
+
+        // Do a very quick and dirty dedupe
+        if (
+          actions.length >= 1 &&
+          JSON.stringify(actions.slice(-1)[0][1]) === JSON.stringify(newPixel)
+        ) {
+          // pass don't do anything
+        } else {
+          setActions([...actions, [[x, y, pixel.data], newPixel]]);
+
+          setPixelsTouched((prev) => {
+            const tmp = prev;
+            // @ts-ignore
+            if ([x, y] in tmp) {
+              // @ts-ignore
+              tmp[[x, y]] = tmp[[x, y]] + 1;
+            } else {
+              // @ts-ignore
+              tmp[[x, y]] = 1;
+            }
+            return tmp;
+          });
+        }
       }
     }
   }
@@ -99,9 +154,11 @@ export function Board() {
         if (context) {
           actions.forEach((action) => {
             const lastAction = action[1];
-            context.fillStyle = `rgba(${lastAction[2][0]}, ${
-              lastAction[2][1]
-            }, ${lastAction[2][2]}, ${lastAction[2][3] / 255})`;
+            context.fillStyle = getColorStr(
+              lastAction[2][0],
+              lastAction[2][1],
+              lastAction[2][2]
+            );
             context?.fillRect(lastAction[0], lastAction[1], 1, 1);
           });
         }
@@ -129,12 +186,17 @@ export function Board() {
             11,
             0,
             0,
-            500,
-            500
+            ZOOM_CANVAS_SIZE.width,
+            ZOOM_CANVAS_SIZE.height
           );
           zoomContext.strokeStyle = "yellow";
           zoomContext.lineWidth = 3;
-          zoomContext.strokeRect(250 - 23, 250 - 23, 46, 46);
+          zoomContext.strokeRect(
+            (ZOOM_CANVAS_SIZE.width - ZOOM_CANVAS_SIZE.width / 11) / 2,
+            (ZOOM_CANVAS_SIZE.height - ZOOM_CANVAS_SIZE.height / 11) / 2,
+            ZOOM_CANVAS_SIZE.width / 11,
+            ZOOM_CANVAS_SIZE.height / 11
+          );
         }
       }
     }
@@ -143,18 +205,32 @@ export function Board() {
 
   function undo() {
     const canvas = canvasRef.current;
-    if (canvas) {
+    if (canvas && actions.length > 0) {
       const context = canvas.getContext("2d");
       if (context) {
         const [x, y, prevColour] = actions[actions.length - 1][0];
-        context.fillStyle = `rgba(${prevColour[0]}, ${prevColour[1]}, ${
+        context.fillStyle = getColorStr(
+          prevColour[0],
+          prevColour[1],
           prevColour[2]
-        }, ${prevColour[3] / 255})`;
+        );
         context?.fillRect(x, y, 1, 1);
         // Pop out the last element of the array
-        if (actions.length > 0) {
-          setActions(actions.slice(0, -1));
-        }
+
+        setActions(actions.slice(0, -1));
+
+        setPixelsTouched((prev) => {
+          const tmp = prev;
+          // @ts-ignore
+          if ([x, y] in tmp) {
+            // @ts-ignore
+            tmp[[x, y]] = Math.max(tmp[[x, y]] - 1, 0);
+          } else {
+            // @ts-ignore
+            tmp[[x, y]] = 0;
+          }
+          return tmp;
+        });
       }
     }
   }
@@ -200,16 +276,29 @@ export function Board() {
     setTranslateY(translateY - 40);
   }
 
-  function parse(a: any[]) {
-    return `Pixels changed: ${a.length}. BONK cost: ${a.length * 10000}`;
-    // return a.reduce((acc, val) => `${acc  }\n\n x: ${val[0][0]}, y: ${val[0][1]}: ${val[0][2]} --> ${val[1][2]}`, '')
+  // Count all the non-zero values of keys in o
+  // Used to count the number of unique changed pixels
+  function pixelsChanged(o: { [k: string]: number }) {
+    return Object.keys(o).reduce((acc, key) => acc + Number(o[key] > 0), 0);
+  }
+
+  function parse() {
+    return `Pixels changed: ${pixelsChanged(pixelsTouched)}. BONK cost: ${
+      pixelsChanged(pixelsTouched) * 10000
+    }`;
   }
 
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
 
-    <Grid templateColumns="3fr 1fr" gap={10} minHeight="100%">
-      <GridItem backgroundColor="rgba(255,230,220)">
+    <Grid templateColumns="3fr 1fr" minHeight="calc(100% - 96px - 1px)">
+      <GridItem
+        backgroundColor="rgb(255,230,220)"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        overflow="hidden"
+      >
         <div
           style={{
             translate: `${translateX}px ${translateY}px`,
@@ -241,68 +330,118 @@ export function Board() {
         </div>
       </GridItem>
 
-      <GridItem>
+      <GridItem px={10} pt={4}>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             zoomIn();
           }}
         >
-          Zoom In
+          <Image
+            src="/icons/Increase.png"
+            priority
+            width={25}
+            height={25}
+            alt="Zoom in"
+          />
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             zoomOut();
           }}
         >
-          Zoom Out
+          <Image
+            src="/icons/Reduce.png"
+            priority
+            width={25}
+            height={25}
+            alt="Zoom out"
+          />
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panLeft();
           }}
         >
-          Pan Left
+          <Image
+            src="/icons/Left.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan left"
+          />
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panRight();
           }}
         >
-          Pan Right
+          <Image
+            src="/icons/Right.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan right"
+          />
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panUp();
           }}
         >
-          Pan Up
+          <Image
+            src="/icons/Up.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan up"
+          />
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             panDown();
           }}
         >
-          Pan Down
+          <Image
+            src="/icons/Down.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan down"
+          />
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={() => {
             undo();
           }}
         >
-          Undo
+          <Image
+            src="/icons/Back.png"
+            priority
+            width={25}
+            height={25}
+            alt="Undo"
+          />
         </Button>
-        <Button variant="outline" onClick={() => {}}>
+        <Button variant="outline" size="sm" onClick={() => mutate()}>
           Refresh Image
         </Button>
         <Button
           variant={actionMode !== "eyedropper" ? "outline" : "solid"}
+          size="sm"
           onClick={() => {
             if (actionMode === "eyedropper") {
               setActionMode("normal");
@@ -311,6 +450,13 @@ export function Board() {
             }
           }}
         >
+          <Image
+            src="/icons/Eyedropper.png"
+            priority
+            width={25}
+            height={25}
+            alt="Eyedropper"
+          />
           Eyedropper Mode
         </Button>
 
@@ -319,18 +465,17 @@ export function Board() {
           isPending={isPending}
           setIsPending={setIsPending}
         />
-        <Text>{parse(actions)}</Text>
+        <Text>{parse()}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
-        <input type="text" value={color} />
+        <RgbInput color={color} setColor={setColor} />
         <canvas
           // @ts-ignore
           ref={zoomCanvasRef}
-          width={CANVAS_SIZE.width}
-          height={CANVAS_SIZE.height}
+          width={ZOOM_CANVAS_SIZE.width}
+          height={ZOOM_CANVAS_SIZE.height}
           style={{
             imageRendering: "pixelated",
             border: "1px solid black",
-            transform: "scale(1)",
           }}
         />
       </GridItem>

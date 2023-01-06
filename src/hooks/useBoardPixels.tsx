@@ -1,7 +1,7 @@
 import { Program } from "@project-serum/anchor";
 import { ClusterType } from "@soceanfi/stake-pool-sdk";
 import { useConnection } from "@solana/wallet-adapter-react";
-import useSWR from "swr";
+import useSWR, { KeyedMutator } from "swr";
 
 import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
 import { useSolana } from "@/contexts/SolanaContext";
@@ -37,6 +37,7 @@ interface UseBoardPixels {
   pixels: BoardPixels | undefined;
   loading: boolean;
   error: Error | undefined;
+  mutate: KeyedMutator<BoardPixels>;
 }
 
 export function useBoardPixels(): UseBoardPixels {
@@ -46,19 +47,16 @@ export function useBoardPixels(): UseBoardPixels {
   } = useSolana();
   const { boardProgram } = useBoardProgramContext();
 
-  const { data, error } = useSWR<BoardPixels, Error>(
+  const { data, error, mutate } = useSWR<BoardPixels, Error>(
     [connection.rpcEndpoint, "pixels"],
     () => fetcher(boardProgram, network),
     { refreshInterval: 60_000, revalidateOnFocus: false }
   );
 
-  if (error) {
-    console.log(error);
-  }
-
   return {
     pixels: data,
     loading: !data && !error,
     error,
+    mutate,
   };
 }
