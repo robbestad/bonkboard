@@ -19,6 +19,8 @@ const ZOOM_CANVAS_SIZE = {
   height: 400,
 };
 
+const MAX_PIXELS = 23;
+
 export function Board() {
   const [isPending, setIsPending] = useState(false);
 
@@ -74,7 +76,7 @@ export function Board() {
         );
         console.log(pixels);
         const { data } = imageData;
-        for (let i = 0; i < pixels.length; i += 4) {
+        for (let i = 0; i < data.length; i += 4) {
           const j = (3 * i) / 4;
           data[i] = pixels[j]; // red
           data[i + 1] = pixels[j + 1]; // green
@@ -109,6 +111,8 @@ export function Board() {
   }
 
   function paint(e: any) {
+    if (actions.length >= MAX_PIXELS) return;
+
     const canvas = canvasRef.current;
     if (canvas) {
       const context = canvas.getContext("2d");
@@ -288,6 +292,15 @@ export function Board() {
     }`;
   }
 
+  function resetDrawnPixels() {
+    setActions([]);
+    setPixelsTouched({});
+  }
+
+  function handleRefreshImage() {
+    mutate();
+  }
+
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
 
@@ -436,7 +449,11 @@ export function Board() {
             alt="Undo"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => mutate()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleRefreshImage()}
+        >
           Refresh Image
         </Button>
         <Button
@@ -464,6 +481,7 @@ export function Board() {
           actions={actions}
           isPending={isPending}
           setIsPending={setIsPending}
+          resetDrawnPixels={() => resetDrawnPixels()}
         />
         <Text>{parse()}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />

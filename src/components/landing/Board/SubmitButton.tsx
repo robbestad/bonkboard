@@ -1,7 +1,11 @@
 import { Button } from "@chakra-ui/react";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 
 import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
@@ -23,12 +27,14 @@ type SubmitButtonProps = {
   actions: [ActionData, ActionData][];
   isPending: boolean;
   setIsPending: (isPending: boolean) => void;
+  resetDrawnPixels: () => void;
 };
 
 export function SubmitButton({
   actions,
   isPending,
   setIsPending,
+  resetDrawnPixels,
 }: SubmitButtonProps) {
   const { boardProgram } = useBoardProgramContext();
   const wallet = useAnchorWallet();
@@ -69,20 +75,29 @@ export function SubmitButton({
         feeAccount
       );
 
-      const [x, y, color] = data[0];
-      const [r, g, b] = color;
+      const ixs: TransactionInstruction[] = [];
 
-      tx = await boardProgram.methods
-        .draw({ x, y }, { r, g, b })
-        .accounts({
-          boardAccount: BOARD_ACCOUNT[network],
-          boardDataAccount: BOARD_DATA_ACCOUNT[network],
-          payer: wallet.publicKey,
-          payerTokenAccount,
-          feeAccount,
-          feeDestination,
-        })
-        .transaction();
+      for (const pixel of data) {
+        const [x, y, color] = pixel;
+        const [r, g, b] = color;
+
+        // eslint-disable-next-line no-await-in-loop
+        const ix = await boardProgram.methods
+          .draw({ x, y }, { r, g, b })
+          .accounts({
+            boardAccount: BOARD_ACCOUNT[network],
+            boardDataAccount: BOARD_DATA_ACCOUNT[network],
+            payer: wallet.publicKey,
+            payerTokenAccount,
+            feeAccount,
+            feeDestination,
+          })
+          .instruction();
+
+        ixs.push(ix);
+      }
+
+      tx = new Transaction().add(...ixs);
 
       const { close: closeProgressSnackbar } = enqueueSnackbar({
         title: "Bonk in progress",
@@ -103,6 +118,8 @@ export function SubmitButton({
       );
 
       await mutate();
+
+      resetDrawnPixels();
 
       closeCurrentSnackbar();
 
