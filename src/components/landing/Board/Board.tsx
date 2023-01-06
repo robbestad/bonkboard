@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
@@ -55,10 +55,7 @@ export function Board() {
 
   const { enqueueSnackbar } = useSnackbarContext();
 
-  const pixelsChangedNumber = useMemo(
-    () => pixelsChanged(pixelsTouched),
-    [pixelsTouched]
-  );
+  const pixelsChangedNumber = pixelsChanged(pixelsTouched);
 
   // useEffect(() => {
   //   document.addEventListener('keydown', (event) => {
