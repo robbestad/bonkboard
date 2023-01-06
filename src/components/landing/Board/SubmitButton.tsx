@@ -55,17 +55,12 @@ export function SubmitButton({
 
       actions.forEach((action) => {
         Object.keys(action).forEach((key) => {
-          const [r, g, b] = action[key][2]
+          // @ts-ignore
+          const [r, g, b] = action[key][2];
+          // @ts-ignore
           tmp[[action[0], action[1]]] = [r, g, b];
-        })
-      })
-
-      // actions.forEach(([, action]) => {
-      //   const [r, g, b] = action[2];
-
-      //   // @ts-ignore
-      //   tmp[[action[0], action[1]]] = [r, g, b];
-      // });
+        });
+      });
 
       const toSend: {
         coord: { x: number; y: number };

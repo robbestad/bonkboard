@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
-import { assert } from "console";
 
 import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
@@ -82,7 +81,7 @@ export function Board() {
           CANVAS_SIZE.width,
           CANVAS_SIZE.height
         );
-        // console.log(pixels);
+
         const { data } = imageData;
         for (let i = 0; i < data.length; i += 4) {
           const j = (3 * i) / 4;
@@ -91,20 +90,20 @@ export function Board() {
           data[i + 2] = pixels[j + 2]; // blue
           data[i + 3] = 255; // alpha channel
         }
-        // console.log(data);
+
         context.putImageData(imageData, 0, 0);
 
-        console.log(`Actions array length: ${actions.length}`)
+        console.log(`Actions array length: ${actions.length}`);
         actions.forEach((action) => {
           Object.keys(action).forEach((key) => {
-            const pixel = action[key]
+            const pixel = action[key];
             context.fillStyle = getColorStr(
               pixel[2][0],
               pixel[2][1],
-              pixel[2][2],
+              pixel[2][2]
             );
             context.fillRect(pixel[0], pixel[1], 1, 1);
-          })
+          });
         });
       }
     }
@@ -130,13 +129,14 @@ export function Board() {
           ];
 
           setdrawBuffer((prev) => {
-            const tmp = {...prev, [[mouseX, mouseY]] : newPixel}
-            return tmp
-          })
+            // @ts-ignore
+            const tmp = { ...prev, [[mouseX, mouseY]]: newPixel };
+            return tmp;
+          });
+        }
       }
     }
-  }
-  }, [mouseX, mouseY, actionMode, color])
+  }, [mouseX, mouseY, actionMode, color]);
 
   // Update canvas every time drawBuffer changes
   useEffect(() => {
@@ -145,12 +145,17 @@ export function Board() {
       if (canvas) {
         const context = canvas.getContext("2d");
         if (context && Object.keys(drawBuffer).length > 0) {
+          // @ts-ignore
           Object.keys(drawBuffer).forEach((key: [number, number]) => {
             context.fillStyle = getColorStr(
+              // @ts-ignore
               drawBuffer[key][2][0],
+              // @ts-ignore
               drawBuffer[key][2][1],
-              drawBuffer[key][2][2],
+              // @ts-ignore
+              drawBuffer[key][2][2]
             );
+            // @ts-ignore
             context?.fillRect(drawBuffer[key][0], drawBuffer[key][1], 1, 1);
           });
         }
@@ -158,8 +163,7 @@ export function Board() {
     }
 
     paintOnCanvas();
-
-  }, [drawBuffer])
+  }, [drawBuffer]);
 
   // Handle when actionMode changes
   // If actionMode has changed to normal, clear the draw buffer, add it to actions
@@ -167,30 +171,27 @@ export function Board() {
   // If actionMode has changed to eyedropper, do nothing
   useEffect(() => {
     if (actionMode === "normal") {
-      console.log("Action mode normal")
-      setActions((prev) => [...prev, drawBuffer])
+      console.log("Action mode normal");
+      setActions((prev) => [...prev, drawBuffer]);
 
       // Set pixels touched so we can impose pixel change limit
       setPixelsTouched((prev) => {
-        const tmp = {...prev}
+        const tmp = { ...prev };
         Object.keys(drawBuffer).forEach((key) => {
           if (key in tmp) {
-            tmp[key] += 1
+            tmp[key] += 1;
+          } else {
+            tmp[key] = 1;
           }
-          else {
-            tmp[key] = 1
-          }
-        })
-        console.log(tmp)
-        return tmp
-      })
+        });
+        return tmp;
+      });
 
-      setdrawBuffer([])
-    }
-    else if (actionMode === "draw") {
-      console.log("Action mode draw")
+      setdrawBuffer({});
+    } else if (actionMode === "draw") {
+      console.log("Action mode draw");
       setdrawBuffer((prev) => {
-        const tmp = prev
+        const tmp = prev;
         const [r, g, b] = getRgb(color);
         // @ts-ignore
         const newPixel: [number, number, Uint8ClampedArray] = [
@@ -198,11 +199,13 @@ export function Board() {
           mouseY,
           new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
         ];
-        tmp[[mouseX, mouseY]] = newPixel
-        return tmp
-      })
+        // @ts-ignore
+        tmp[[mouseX, mouseY]] = newPixel;
+        return tmp;
+      });
     }
-  }, [actionMode, color, ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actionMode, color]);
 
   // Update Zoom view everytime a pixel is changed or the mouse moves
   useEffect(() => {
@@ -247,17 +250,14 @@ export function Board() {
         // Pop out the last element of the array
 
         setPixelsTouched((prev) => {
-          const tmp = {...prev}
-          console.log(actions)
-          console.log(actions.slice(-1)[0])
+          const tmp = { ...prev };
           Object.keys(actions.slice(-1)[0]).forEach((key) => {
             // key should always be in setPixelsTouched
-            console.log(key)
-            tmp[key] -= 1
-          })
-          console.log(tmp)
-          return tmp
-        })
+            console.log(key);
+            tmp[key] -= 1;
+          });
+          return tmp;
+        });
 
         setActions(actions.slice(0, -1));
       }
@@ -323,7 +323,7 @@ export function Board() {
       event.preventDefault();
       const context = canvas?.getContext("2d");
       if (context) {
-        setScale(Math.max(scale - event.deltaY/ZOOM_SENSITIVITY, 1));
+        setScale(Math.max(scale - event.deltaY / ZOOM_SENSITIVITY, 1));
       }
     }
 
@@ -369,7 +369,7 @@ export function Board() {
             // }}
             onMouseDown={() => {
               if (actionMode === "normal") {
-                setActionMode("draw")
+                setActionMode("draw");
               }
               if (actionMode === "eyedropper") {
                 const canvas = canvasRef.current;
@@ -383,7 +383,7 @@ export function Board() {
               }
             }}
             onMouseUp={() => {
-              setActionMode("normal")
+              setActionMode("normal");
             }}
           />
         </div>
