@@ -49,7 +49,7 @@ export function Board() {
   const [pixelsTouched, setPixelsTouched] = useState<{ [key: string]: number }>(
     {}
   );
-
+  const [drawBuffer, setdrawBuffer] = useState<{ [key: string]: [] }>({});
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -189,8 +189,72 @@ export function Board() {
     paintOnCanvas();
   }, [actions, pixels]);
 
+  // Draw (or not) when the mouse moves
+  useEffect(() => {
+    if (actionMode === "draw") {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        if (context) {
+          const [r, g, b] = getRgb(color);
+          // @ts-ignore
+          const newPixel: [number, number, Uint8ClampedArray] = [
+            mouseX,
+            mouseY,
+            new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
+          ];
+
+          setdrawBuffer((prev) => {
+            const tmp = prev
+            tmp[[mouseX, mouseY]] = newPixel
+            return tmp
+          })
+      }
+    }
+  }
+  }, [mouseX, mouseY, actionMode, color])
+
+  // Update canvas every time drawBuffer changes
+  useEffect(() => {
+    function paintOnCanvas() {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const context = canvas.getContext("2d");
+        if (context && drawBuffer.length > 0) {
+          Object.keys(drawBuffer).forEach((lastAction) => {
+            context.fillStyle = getColorStr(
+              lastAction[2][0],
+              lastAction[2][1],
+              lastAction[2][2]
+            );
+            context?.fillRect(lastAction[0], lastAction[1], 1, 1);
+          });
+        }
+      }
+    }
+
+    console.log("Hey this should be called")
+    console.log(drawBuffer)
+    paintOnCanvas();
+
+
+  }, [drawBuffer])
+
+  // Handle when actionMode changes
+  // If actionMode has changed to normal, clear the draw buffer, add it to actions
+  // If actionMode has changed to draw, do nothing
+  // If actionMode has changed to eyedropper, do nothing
+  useEffect(() => {
+    if (actionMode === "normal") {
+      console.log("Action mode normal")
+      console.log(drawBuffer)
+    }
+    else if (actionMode === "draw") {
+      console.log("Action mode draw")
+    }
+  }, [actionMode])
+
   // Update Zoom view everytime a pixel is changed or the mouse moves
-  // FIXME this is not working
   useEffect(() => {
     function paintOnZoomCanvas() {
       const canvas = canvasRef.current;
@@ -356,8 +420,14 @@ export function Board() {
               setMouseX(x);
               setMouseY(y);
             }}
-            onClick={(e) => {
-              performActionOnCanvas(e);
+            // onClick={(e) => {
+            //   performActionOnCanvas(e);
+            // }}
+            onMouseDown={() => {
+              setActionMode("draw")
+            }}
+            onMouseUp={() => {
+              setActionMode("normal")
             }}
           />
         </div>
