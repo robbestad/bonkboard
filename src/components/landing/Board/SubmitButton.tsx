@@ -56,9 +56,19 @@ export function SubmitButton({
     let tx: Transaction | undefined;
 
     try {
-      const data = actions.map((action) => {
-        const [x, y, color] = action[1];
-        return [new BN(x), new BN(y), color] as [BN, BN, Uint8ClampedArray];
+      const tmp: Record<string, any> = {};
+      actions.forEach(([, action]) => {
+        const [r, g, b] = action[2];
+
+        // @ts-ignore
+        tmp[[action[0], action[1]]] = [r, g, b];
+      });
+
+      const toSend: { x: BN; y: BN; r: number; g: number; b: number }[] = [];
+      Object.entries(tmp).forEach(([key, value]) => {
+        const [x, y] = key.split(",").map((num) => new BN(num));
+        const [r, g, b] = value;
+        toSend.push({ x, y, r, g, b });
       });
 
       const feeAccount = findFeeAccount(
@@ -77,10 +87,7 @@ export function SubmitButton({
 
       const ixs: TransactionInstruction[] = [];
 
-      for (const pixel of data) {
-        const [x, y, color] = pixel;
-        const [r, g, b] = color;
-
+      for (const { x, y, r, g, b } of toSend) {
         // eslint-disable-next-line no-await-in-loop
         const ix = await boardProgram.methods
           .draw({ x, y }, { r, g, b })
@@ -101,7 +108,7 @@ export function SubmitButton({
 
       const { close: closeProgressSnackbar } = enqueueSnackbar({
         title: "Bonk in progress",
-        description: `Bonking ${data.length} pixels...`,
+        description: `Bonking ${toSend.length} pixels...`,
         variant: "standard",
         options: {
           duration: null,
