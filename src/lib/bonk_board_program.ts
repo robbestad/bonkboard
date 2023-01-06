@@ -263,11 +263,11 @@ export type BonkBoardProgram = {
         fields: [
           {
             name: "x";
-            type: "u64";
+            type: "u16";
           },
           {
             name: "y";
-            type: "u64";
+            type: "u16";
           }
         ];
       };
@@ -612,11 +612,11 @@ export const IDL: BonkBoardProgram = {
         fields: [
           {
             name: "x",
-            type: "u64",
+            type: "u16",
           },
           {
             name: "y",
-            type: "u64",
+            type: "u16",
           },
         ],
       },

@@ -19,7 +19,7 @@ const ZOOM_CANVAS_SIZE = {
   height: 400,
 };
 
-const MAX_PIXELS = 44;
+const MAX_PIXELS = 130;
 
 // Count all the non-zero values of keys in o
 // Used to count the number of unique changed pixels

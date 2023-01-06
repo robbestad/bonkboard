@@ -2,7 +2,6 @@ import { Button } from "@chakra-ui/react";
 import { getAssociatedTokenAddress } from "@solana/spl-token";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import BN from "bn.js";
 
 import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
@@ -61,11 +60,11 @@ export function SubmitButton({
       });
 
       const toSend: {
-        coord: { x: BN; y: BN };
+        coord: { x: number; y: number };
         color: { r: number; g: number; b: number };
       }[] = [];
       Object.entries(tmp).forEach(([key, value]) => {
-        const [x, y] = key.split(",").map((num) => new BN(num));
+        const [x, y] = key.split(",").map((num) => Number(num));
         const [r, g, b] = value;
         toSend.push({ coord: { x, y }, color: { r, g, b } });
       });
