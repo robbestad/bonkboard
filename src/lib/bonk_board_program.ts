@@ -103,24 +103,16 @@ export type BonkBoardProgram = {
       ];
       args: [
         {
-          name: "x";
-          type: "u64";
+          name: "coord";
+          type: {
+            defined: "Coord";
+          };
         },
         {
-          name: "y";
-          type: "u64";
-        },
-        {
-          name: "r";
-          type: "u8";
-        },
-        {
-          name: "g";
-          type: "u8";
-        },
-        {
-          name: "b";
-          type: "u8";
+          name: "color";
+          type: {
+            defined: "Color";
+          };
         }
       ];
     },
@@ -267,6 +259,44 @@ export type BonkBoardProgram = {
       };
     }
   ];
+  types: [
+    {
+      name: "Coord";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "x";
+            type: "u64";
+          },
+          {
+            name: "y";
+            type: "u64";
+          }
+        ];
+      };
+    },
+    {
+      name: "Color";
+      type: {
+        kind: "struct";
+        fields: [
+          {
+            name: "r";
+            type: "u8";
+          },
+          {
+            name: "g";
+            type: "u8";
+          },
+          {
+            name: "b";
+            type: "u8";
+          }
+        ];
+      };
+    }
+  ];
   errors: [
     {
       code: 6000;
@@ -282,6 +312,21 @@ export type BonkBoardProgram = {
       code: 6002;
       name: "InvalidCoordinateValue";
       msg: "The provided coordinate is out of range";
+    },
+    {
+      code: 6003;
+      name: "InvalidBoardAccount";
+      msg: "The provided board account does not match the board data account";
+    },
+    {
+      code: 6004;
+      name: "InvalidFeeDestination";
+      msg: "The provided fee destination is not valid";
+    },
+    {
+      code: 6005;
+      name: "InvalidAuthority";
+      msg: "The provided authority is not valid";
     }
   ];
 };
@@ -391,24 +436,16 @@ export const IDL: BonkBoardProgram = {
       ],
       args: [
         {
-          name: "x",
-          type: "u64",
+          name: "coord",
+          type: {
+            defined: "Coord",
+          },
         },
         {
-          name: "y",
-          type: "u64",
-        },
-        {
-          name: "r",
-          type: "u8",
-        },
-        {
-          name: "g",
-          type: "u8",
-        },
-        {
-          name: "b",
-          type: "u8",
+          name: "color",
+          type: {
+            defined: "Color",
+          },
         },
       ],
     },
@@ -555,6 +592,44 @@ export const IDL: BonkBoardProgram = {
       },
     },
   ],
+  types: [
+    {
+      name: "Coord",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "x",
+            type: "u64",
+          },
+          {
+            name: "y",
+            type: "u64",
+          },
+        ],
+      },
+    },
+    {
+      name: "Color",
+      type: {
+        kind: "struct",
+        fields: [
+          {
+            name: "r",
+            type: "u8",
+          },
+          {
+            name: "g",
+            type: "u8",
+          },
+          {
+            name: "b",
+            type: "u8",
+          },
+        ],
+      },
+    },
+  ],
   errors: [
     {
       code: 6000,
@@ -570,6 +645,21 @@ export const IDL: BonkBoardProgram = {
       code: 6002,
       name: "InvalidCoordinateValue",
       msg: "The provided coordinate is out of range",
+    },
+    {
+      code: 6003,
+      name: "InvalidBoardAccount",
+      msg: "The provided board account does not match the board data account",
+    },
+    {
+      code: 6004,
+      name: "InvalidFeeDestination",
+      msg: "The provided fee destination is not valid",
+    },
+    {
+      code: 6005,
+      name: "InvalidAuthority",
+      msg: "The provided authority is not valid",
     },
   ],
 };

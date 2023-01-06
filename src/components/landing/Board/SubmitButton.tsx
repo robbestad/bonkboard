@@ -7,6 +7,7 @@ import BN from "bn.js";
 import { useBoardProgramContext } from "@/contexts/BoardProgramContext";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useSolana } from "@/contexts/SolanaContext";
+import { useBoardPixels } from "@/hooks/useBoardPixels";
 import {
   BOARD_ACCOUNT,
   BOARD_DATA_ACCOUNT,
@@ -37,6 +38,8 @@ export function SubmitButton({
   } = useSolana();
 
   const { enqueueSnackbar } = useSnackbarContext();
+
+  const { mutate } = useBoardPixels();
 
   const handleSubmit = async () => {
     if (!wallet?.publicKey || actions.length === 0 || isPending) return;
@@ -70,7 +73,7 @@ export function SubmitButton({
       const [r, g, b] = color;
 
       tx = await boardProgram.methods
-        .draw(x, y, r, g, b)
+        .draw({ x, y }, { r, g, b })
         .accounts({
           boardAccount: BOARD_ACCOUNT[network],
           boardDataAccount: BOARD_DATA_ACCOUNT[network],
@@ -98,6 +101,8 @@ export function SubmitButton({
         [{ tx, signers: [] }],
         connection
       );
+
+      await mutate();
 
       closeCurrentSnackbar();
 
