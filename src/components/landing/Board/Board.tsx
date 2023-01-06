@@ -79,7 +79,7 @@ export function Board() {
           data[i] = pixels[j]; // red
           data[i + 1] = pixels[j + 1]; // green
           data[i + 2] = pixels[j + 2]; // blue
-          data[i + 3] = 255; // alpha channel
+          // data[i + 3] = 255; // alpha channel
         }
         console.log(data);
         context.putImageData(imageData, 0, 0);
