@@ -155,18 +155,19 @@ export function Board() {
         if (isSameColorPainted) {
           // pass don't do anything
         } else {
-          const newActions = [...actions, [[x, y, pixel.data], newPixel]];
-          const newActionsNoDupes = newActions.filter(
-            (action) =>
-              newActions.filter(
-                (_action) =>
-                  _action[0][0] === action[0][0] &&
-                  _action[0][1] === action[0][1]
-              ).length <= 1
-          );
+          const isDupAction = actions.find((action) => {
+            const [x1, y1, [r1, g1, b1]] = action[1];
+            const [x2, y2, [r2, g2, b2]] = newPixel;
+            return (
+              x1 === x2 && y1 === y2 && r1 === r2 && g1 === g2 && b1 === b2
+            );
+          });
 
-          if (newActionsNoDupes.length > actions.length) {
-            setActions(newActionsNoDupes);
+          if (!isDupAction) {
+            const newAction = [[x, y, pixel.data], newPixel];
+            const newActions = [...actions, newAction];
+
+            setActions(newActions);
 
             setPixelsTouched((prev) => {
               const tmp = prev;
