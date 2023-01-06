@@ -59,16 +59,6 @@ export function Board() {
 
   const pixelsChangedNumber = pixelsChanged(pixelsTouched);
 
-  // useEffect(() => {
-  //   document.addEventListener('keydown', (event) => {
-  //     if (event.ctrlKey && event.key === 'z') {
-  //       console.log("Undo")
-  //       undo();
-  //     }
-  //   });
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
-
   useEffect(() => {
     if (error) {
       enqueueSnackbar({
@@ -79,6 +69,7 @@ export function Board() {
     }
   }, [enqueueSnackbar, error]);
 
+  // Redraw the board every time it changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas && pixels) {
@@ -109,63 +100,6 @@ export function Board() {
     return getColorStr(u[0], u[1], u[2]);
   }
 
-  function performActionOnCanvas(e: any) {
-    // Eyedropper mode
-    if (actionMode === "eyedropper") {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const context = canvas.getContext("2d");
-        if (context) {
-          const [x, y] = getCursorPosition(e);
-          const pixel = context.getImageData(x, y, 1, 1);
-          setColor(uint8torgb(pixel.data));
-        }
-      }
-    } else {
-      paint(e);
-    }
-  }
-
-  function paint(e: any) {
-    if (pixelsChangedNumber >= MAX_PIXELS) return;
-
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        const [x, y] = getCursorPosition(e);
-        const pixel = context.getImageData(x, y, 1, 1);
-        const [r, g, b] = getRgb(color);
-        // @ts-ignore
-        const newPixel: [number, number, Uint8ClampedArray] = [
-          x,
-          y,
-          new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
-        ];
-
-        const newAction = [[x, y, pixel.data], newPixel];
-        const newActions = [...actions, newAction];
-
-        setActions(newActions);
-
-        setPixelsTouched((prev) => {
-          const tmp = prev;
-
-          // @ts-ignore
-          if ([x, y] in tmp) {
-            // @ts-ignore
-            tmp[[x, y]] += 1;
-          } else {
-            // @ts-ignore
-            tmp[[x, y]] = 1;
-          }
-
-          return tmp;
-        });
-      }
-    }
-  }
-
   // Update Canvas every time a pixel is changed
   useEffect(() => {
     function paintOnCanvas() {
@@ -174,13 +108,15 @@ export function Board() {
         const context = canvas.getContext("2d");
         if (context) {
           actions.forEach((action) => {
-            const lastAction = action[1];
-            context.fillStyle = getColorStr(
-              lastAction[2][0],
-              lastAction[2][1],
-              lastAction[2][2]
-            );
-            context?.fillRect(lastAction[0], lastAction[1], 1, 1);
+            Object.keys(action).forEach((key) => {
+              const pixel = action[key]
+              context.fillStyle = getColorStr(
+                pixel[2][0],
+                pixel[2][1],
+                pixel[2][2],
+              );
+              context.fillRect(pixel[0], pixel[1], 1, 1);
+            })
           });
         }
       }
@@ -189,7 +125,7 @@ export function Board() {
     paintOnCanvas();
   }, [actions, pixels]);
 
-  // Draw (or not) when the mouse moves
+  // Updates the drawbuffer when the mouse moves if the current actionMode is draw
   useEffect(() => {
     if (actionMode === "draw") {
       const canvas = canvasRef.current;
@@ -205,8 +141,8 @@ export function Board() {
           ];
 
           setdrawBuffer((prev) => {
-            const tmp = prev
-            tmp[[mouseX, mouseY]] = newPixel
+            const tmp = {...prev, [[mouseX, mouseY]] : newPixel}
+            console.log(Object.keys(prev), Object.keys(tmp))
             return tmp
           })
       }
@@ -220,23 +156,20 @@ export function Board() {
       const canvas = canvasRef.current;
       if (canvas) {
         const context = canvas.getContext("2d");
-        if (context && drawBuffer.length > 0) {
-          Object.keys(drawBuffer).forEach((lastAction) => {
+        if (context && Object.keys(drawBuffer).length > 0) {
+          Object.keys(drawBuffer).forEach((key: [number, number]) => {
             context.fillStyle = getColorStr(
-              lastAction[2][0],
-              lastAction[2][1],
-              lastAction[2][2]
+              drawBuffer[key][2][0],
+              drawBuffer[key][2][1],
+              drawBuffer[key][2][2],
             );
-            context?.fillRect(lastAction[0], lastAction[1], 1, 1);
+            context?.fillRect(drawBuffer[key][0], drawBuffer[key][1], 1, 1);
           });
         }
       }
     }
 
-    console.log("Hey this should be called")
-    console.log(drawBuffer)
     paintOnCanvas();
-
 
   }, [drawBuffer])
 
@@ -248,11 +181,25 @@ export function Board() {
     if (actionMode === "normal") {
       console.log("Action mode normal")
       console.log(drawBuffer)
+      setActions((prev) => [...prev, drawBuffer])
+      setdrawBuffer([])
     }
     else if (actionMode === "draw") {
       console.log("Action mode draw")
+      setdrawBuffer((prev) => {
+        const tmp = prev
+        const [r, g, b] = getRgb(color);
+        // @ts-ignore
+        const newPixel: [number, number, Uint8ClampedArray] = [
+          mouseX,
+          mouseY,
+          new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
+        ];
+        tmp[[mouseX, mouseY]] = newPixel
+        return tmp
+      })
     }
-  }, [actionMode])
+  }, [actionMode, color, ])
 
   // Update Zoom view everytime a pixel is changed or the mouse moves
   useEffect(() => {
@@ -424,7 +371,19 @@ export function Board() {
             //   performActionOnCanvas(e);
             // }}
             onMouseDown={() => {
-              setActionMode("draw")
+              if (actionMode === "normal") {
+                setActionMode("draw")
+              }
+              if (actionMode === "eyedropper") {
+                const canvas = canvasRef.current;
+                if (canvas) {
+                  const context = canvas.getContext("2d");
+                  if (context) {
+                    const pixel = context.getImageData(mouseX, mouseY, 1, 1);
+                    setColor(uint8torgb(pixel.data));
+                  }
+                }
+              }
             }}
             onMouseUp={() => {
               setActionMode("normal")
