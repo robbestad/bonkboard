@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
 
 import { RgbInput } from "@/components/landing/Board/RgbInput";
-import { useImage } from "@/hooks/useImage";
+import { SubmitButton } from "@/components/landing/Board/SubmitButton";
+import { useSnackbarContext } from "@/contexts/SnackbarContext";
+import { useBoardPixels } from "@/hooks/useBoardPixels";
 import { getColorStr, getRgb } from "@/utils/color";
 
 const CANVAS_SIZE = {
@@ -17,6 +20,8 @@ const ZOOM_CANVAS_SIZE = {
 };
 
 export function Board() {
+  const [isPending, setIsPending] = useState(false);
+
   const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
   const [scale, setScale] = useState<number>(1);
   const [translateX, setTranslateX] = useState<number>(0);
@@ -32,6 +37,10 @@ export function Board() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const { pixels, error, mutate } = useBoardPixels();
+
+  const { enqueueSnackbar } = useSnackbarContext();
+
   // useEffect(() => {
   //   document.addEventListener('keydown', (event) => {
   //     if (event.ctrlKey && event.key === 'z') {
@@ -43,8 +52,18 @@ export function Board() {
   // }, [])
 
   useEffect(() => {
+    if (error) {
+      enqueueSnackbar({
+        title: "Error loading pixels",
+        description: error.message,
+        variant: "critical",
+      });
+    }
+  }, [enqueueSnackbar, error]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (canvas) {
+    if (canvas && pixels) {
       const context = canvas.getContext("2d");
       if (context) {
         // draw something on canvas on load
@@ -53,18 +72,20 @@ export function Board() {
           CANVAS_SIZE.width,
           CANVAS_SIZE.height
         );
+        console.log(pixels);
         const { data } = imageData;
-        for (let i = 0; i < data.length; i += 4) {
+        for (let i = 0; i < pixels.length; i += 4) {
           const j = (3 * i) / 4;
-          data[i] = imageArr[j]; // red
-          data[i + 1] = imageArr[j + 1]; // green
-          data[i + 2] = imageArr[j + 2]; // blue
-          data[i + 3] = 255; // alpha channel
+          data[i] = pixels[j]; // red
+          data[i + 1] = pixels[j + 1]; // green
+          data[i + 2] = pixels[j + 2]; // blue
+          // data[i + 3] = 255; // alpha channel
         }
+        console.log(data);
         context.putImageData(imageData, 0, 0);
       }
     }
-  }, [imageArr]);
+  }, [pixels]);
 
   function uint8torgb(u: Uint8ClampedArray) {
     return getColorStr(u[0], u[1], u[2]);
@@ -317,7 +338,13 @@ export function Board() {
             zoomIn();
           }}
         >
-          <img src="icons/Increase.png" />
+          <Image
+            src="/icons/Increase.png"
+            priority
+            width={25}
+            height={25}
+            alt="Zoom in"
+          />
         </Button>
         <Button
           variant="outline"
@@ -326,7 +353,13 @@ export function Board() {
             zoomOut();
           }}
         >
-          <img src="icons/Reduce.png" />
+          <Image
+            src="/icons/Reduce.png"
+            priority
+            width={25}
+            height={25}
+            alt="Zoom out"
+          />
         </Button>
         <Button
           variant="outline"
@@ -335,7 +368,13 @@ export function Board() {
             panLeft();
           }}
         >
-          <img src="icons/Left.png" />
+          <Image
+            src="/icons/Left.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan left"
+          />
         </Button>
         <Button
           variant="outline"
@@ -344,7 +383,13 @@ export function Board() {
             panRight();
           }}
         >
-          <img src="icons/Right.png" />
+          <Image
+            src="/icons/Right.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan right"
+          />
         </Button>
         <Button
           variant="outline"
@@ -353,7 +398,13 @@ export function Board() {
             panUp();
           }}
         >
-          <img src="icons/Up.png" />
+          <Image
+            src="/icons/Up.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan up"
+          />
         </Button>
         <Button
           variant="outline"
@@ -362,7 +413,13 @@ export function Board() {
             panDown();
           }}
         >
-          <img src="icons/Down.png" />
+          <Image
+            src="/icons/Down.png"
+            priority
+            width={25}
+            height={25}
+            alt="Pan down"
+          />
         </Button>
         <Button
           variant="outline"
@@ -371,9 +428,15 @@ export function Board() {
             undo();
           }}
         >
-          <img src="icons/Back.png" />
+          <Image
+            src="/icons/Back.png"
+            priority
+            width={25}
+            height={25}
+            alt="Undo"
+          />
         </Button>
-        <Button variant="outline" size="sm" onClick={() => fetchImage()}>
+        <Button variant="outline" size="sm" onClick={() => mutate()}>
           Refresh Image
         </Button>
         <Button
@@ -387,13 +450,21 @@ export function Board() {
             }
           }}
         >
-          <img src="icons/Eyedropper.png" />
+          <Image
+            src="/icons/Eyedropper.png"
+            priority
+            width={25}
+            height={25}
+            alt="Eyedropper"
+          />
           Eyedropper Mode
         </Button>
 
-        <Button size="lg" onClick={() => {}}>
-          Submit!
-        </Button>
+        <SubmitButton
+          actions={actions}
+          isPending={isPending}
+          setIsPending={setIsPending}
+        />
         <Text>{parse()}</Text>
         <RgbStringColorPicker color={color} onChange={setColor} />
         <RgbInput color={color} setColor={setColor} />
