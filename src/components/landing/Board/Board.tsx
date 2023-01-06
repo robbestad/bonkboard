@@ -311,18 +311,11 @@ export function Board() {
     const canvas = canvasRef.current;
     if (canvas === null) return;
 
-    // this is tricky. Update the viewport's "origin" such that
-    // the mouse doesn't move during scale - the 'zoom point' of the mouse
-    // before and after zoom is relatively the same position on the viewport
     function handleWheel(event: WheelEvent) {
       event.preventDefault();
       const context = canvas?.getContext("2d");
       if (context) {
-        const zoom = 1 - event.deltaY / ZOOM_SENSITIVITY;
-
-        context.scale(zoom, zoom);
-
-        setScale(scale * zoom);
+        setScale(Math.max(scale - event.deltaY/ZOOM_SENSITIVITY, 1));
       }
     }
 
