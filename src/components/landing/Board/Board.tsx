@@ -148,8 +148,16 @@ export function Board() {
 
           setPixelsTouched((prev) => {
             const tmp = prev;
+
             // @ts-ignore
-            tmp[[x, y]] = 1;
+            if (tmp[[x, y]]) {
+              // @ts-ignore
+              tmp[[x, y]] += 1;
+            } else {
+              // @ts-ignore
+              tmp[[x, y]] = 1;
+            }
+
             return tmp;
           });
         }
