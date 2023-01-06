@@ -315,7 +315,7 @@ export function Board() {
       event.preventDefault();
       const context = canvas?.getContext("2d");
       if (context) {
-        setScale(Math.max(scale - event.deltaY/ZOOM_SENSITIVITY, 1));
+        setScale(Math.max(scale - event.deltaY / ZOOM_SENSITIVITY, 1));
       }
     }
 
@@ -493,6 +493,12 @@ export function Board() {
             width={25}
             height={25}
             alt="Eyedropper"
+            style={{
+              transition: "filter 300ms ease 0s",
+              ...(actionMode === "eyedropper" && {
+                filter: "invert(1)",
+              }),
+            }}
           />
           Eyedropper Mode
         </Button>
