@@ -21,6 +21,8 @@ const ZOOM_CANVAS_SIZE = {
 
 const MAX_PIXELS = 100;
 
+const ZOOM_SENSITIVITY = 500; // bigger for lower zoom per scroll
+
 // Count all the non-zero values of keys in o
 // Used to count the number of unique changed pixels
 function pixelsChanged(o: { [k: string]: number }) {
@@ -303,6 +305,31 @@ export function Board() {
   function handleRefreshImage() {
     mutate();
   }
+
+  // zoom
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas === null) return;
+
+    // this is tricky. Update the viewport's "origin" such that
+    // the mouse doesn't move during scale - the 'zoom point' of the mouse
+    // before and after zoom is relatively the same position on the viewport
+    function handleWheel(event: WheelEvent) {
+      event.preventDefault();
+      const context = canvas?.getContext("2d");
+      if (context) {
+        const zoom = 1 - event.deltaY / ZOOM_SENSITIVITY;
+
+        context.scale(zoom, zoom);
+
+        setScale(scale * zoom);
+      }
+    }
+
+    canvas.addEventListener("wheel", handleWheel);
+    // eslint-disable-next-line consistent-return
+    return () => canvas.removeEventListener("wheel", handleWheel);
+  }, [mouseX, mouseY, scale]);
 
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
