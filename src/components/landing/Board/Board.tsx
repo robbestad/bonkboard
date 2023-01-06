@@ -170,7 +170,7 @@ export function Board() {
     }
 
     paintOnCanvas();
-  }, [actions]);
+  }, [actions, pixels]);
 
   // Update Zoom view everytime a pixel is changed or the mouse moves
   // FIXME this is not working
