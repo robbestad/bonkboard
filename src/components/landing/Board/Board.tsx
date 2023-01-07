@@ -172,7 +172,9 @@ export function Board() {
   useEffect(() => {
     if (actionMode === "normal") {
       console.log("Action mode normal");
-      setActions((prev) => [...prev, drawBuffer]);
+      if (Object.keys(drawBuffer).length > 0) {
+        setActions((prev) => [...prev, drawBuffer]);
+      }
 
       // Set pixels touched so we can impose pixel change limit
       setPixelsTouched((prev) => {
@@ -205,7 +207,7 @@ export function Board() {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actionMode, color]);
+  }, [actionMode]);
 
   // Update Zoom view everytime a pixel is changed or the mouse moves
   useEffect(() => {
