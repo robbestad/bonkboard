@@ -39,7 +39,7 @@ export function Board() {
   const [isPending, setIsPending] = useState(false);
 
   const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
-  const [scale, setScale] = useState<number>(1);
+  const [scale, setScale] = useState<number>(5);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
   const [actions, setActions] = useState<any[]>([]);
