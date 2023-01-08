@@ -54,13 +54,15 @@ export function SubmitButton({
       const tmp: Record<string, any> = {};
 
       actions.forEach((action) => {
-        Object.keys(action).forEach((key) => {
+        Object.entries(action).forEach(([, value]) => {
           // @ts-ignore
-          const [r, g, b] = action[key][2];
+          const [r, g, b] = value[2];
           // @ts-ignore
-          tmp[[action[0], action[1]]] = [r, g, b];
+          tmp[[value[0], value[1]]] = [r, g, b];
         });
       });
+
+      console.log(tmp);
 
       const toSend: {
         coord: { x: number; y: number };
@@ -85,6 +87,8 @@ export function SubmitButton({
       const { feeDestination } = await boardProgram.account.fee.fetch(
         feeAccount
       );
+
+      console.log(toSend);
 
       tx = await boardProgram.methods
         .draw(toSend)
