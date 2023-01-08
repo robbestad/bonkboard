@@ -34,3 +34,6 @@ export const TOKEN_TO_MINT = {
 };
 
 export type UnstakeableToken = keyof typeof TOKEN_TO_MINT;
+
+// Maximum number of pixels that can be sent in a transaction
+export const MAX_PIXELS = 100;

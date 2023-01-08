@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/landing/Board/SubmitButton";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useBoardPixels } from "@/hooks/useBoardPixels";
 import { getColorStr, getRgb } from "@/utils/color";
+import { MAX_PIXELS } from "@/utils/consts";
 
 const CANVAS_SIZE = {
   width: 500,
@@ -18,8 +19,6 @@ const ZOOM_CANVAS_SIZE = {
   width: 400,
   height: 400,
 };
-
-const MAX_PIXELS = 100;
 
 const ZOOM_SENSITIVITY = 500; // bigger for lower zoom per scroll
 
@@ -49,7 +48,7 @@ export function Board() {
   const [pixelsTouched, setPixelsTouched] = useState<{ [key: string]: number }>(
     {}
   );
-
+  const [drawBuffer, setdrawBuffer] = useState<{ [key: string]: [] }>({});
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -58,16 +57,6 @@ export function Board() {
   const { enqueueSnackbar } = useSnackbarContext();
 
   const pixelsChangedNumber = pixelsChanged(pixelsTouched);
-
-  // useEffect(() => {
-  //   document.addEventListener('keydown', (event) => {
-  //     if (event.ctrlKey && event.key === 'z') {
-  //       console.log("Undo")
-  //       undo();
-  //     }
-  //   });
-  // // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [])
 
   useEffect(() => {
     if (error) {
@@ -79,6 +68,7 @@ export function Board() {
     }
   }, [enqueueSnackbar, error]);
 
+  // Redraw the board every time it changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas && pixels) {
@@ -90,7 +80,7 @@ export function Board() {
           CANVAS_SIZE.width,
           CANVAS_SIZE.height
         );
-        console.log(pixels);
+
         const { data } = imageData;
         for (let i = 0; i < data.length; i += 4) {
           const j = (3 * i) / 4;
@@ -99,98 +89,126 @@ export function Board() {
           data[i + 2] = pixels[j + 2]; // blue
           data[i + 3] = 255; // alpha channel
         }
-        console.log(data);
+
         context.putImageData(imageData, 0, 0);
+
+        console.log(`Actions array length: ${actions.length}`);
+        actions.forEach((action) => {
+          Object.keys(action).forEach((key) => {
+            const pixel = action[key];
+            context.fillStyle = getColorStr(
+              pixel[2][0],
+              pixel[2][1],
+              pixel[2][2]
+            );
+            context.fillRect(pixel[0], pixel[1], 1, 1);
+          });
+        });
       }
     }
-  }, [pixels]);
+  }, [actions, pixels]);
 
   function uint8torgb(u: Uint8ClampedArray) {
     return getColorStr(u[0], u[1], u[2]);
   }
 
-  function performActionOnCanvas(e: any) {
-    // Eyedropper mode
-    if (actionMode === "eyedropper") {
+  // Updates the drawbuffer when the mouse moves if the current actionMode is draw
+  useEffect(() => {
+    if (actionMode === "draw") {
       const canvas = canvasRef.current;
       if (canvas) {
         const context = canvas.getContext("2d");
         if (context) {
-          const [x, y] = getCursorPosition(e);
-          const pixel = context.getImageData(x, y, 1, 1);
-          setColor(uint8torgb(pixel.data));
+          const [r, g, b] = getRgb(color);
+          // @ts-ignore
+          const newPixel: [number, number, Uint8ClampedArray] = [
+            mouseX,
+            mouseY,
+            new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
+          ];
+
+          setdrawBuffer((prev) => {
+            // @ts-ignore
+            const tmp = { ...prev, [[mouseX, mouseY]]: newPixel };
+            return tmp;
+          });
         }
       }
-    } else {
-      paint(e);
     }
-  }
+  }, [mouseX, mouseY, actionMode, color]);
 
-  function paint(e: any) {
-    if (pixelsChangedNumber >= MAX_PIXELS) return;
-
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        const [x, y] = getCursorPosition(e);
-        const pixel = context.getImageData(x, y, 1, 1);
-        const [r, g, b] = getRgb(color);
-        // @ts-ignore
-        const newPixel: [number, number, Uint8ClampedArray] = [
-          x,
-          y,
-          new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
-        ];
-
-        const newAction = [[x, y, pixel.data], newPixel];
-        const newActions = [...actions, newAction];
-
-        setActions(newActions);
-
-        setPixelsTouched((prev) => {
-          const tmp = prev;
-
-          // @ts-ignore
-          if ([x, y] in tmp) {
-            // @ts-ignore
-            tmp[[x, y]] += 1;
-          } else {
-            // @ts-ignore
-            tmp[[x, y]] = 1;
-          }
-
-          return tmp;
-        });
-      }
-    }
-  }
-
-  // Update Canvas every time a pixel is changed
+  // Update canvas every time drawBuffer changes
   useEffect(() => {
     function paintOnCanvas() {
       const canvas = canvasRef.current;
       if (canvas) {
         const context = canvas.getContext("2d");
-        if (context) {
-          actions.forEach((action) => {
-            const lastAction = action[1];
+        if (context && Object.keys(drawBuffer).length > 0) {
+          // @ts-ignore
+          Object.keys(drawBuffer).forEach((key: [number, number]) => {
             context.fillStyle = getColorStr(
-              lastAction[2][0],
-              lastAction[2][1],
-              lastAction[2][2]
+              // @ts-ignore
+              drawBuffer[key][2][0],
+              // @ts-ignore
+              drawBuffer[key][2][1],
+              // @ts-ignore
+              drawBuffer[key][2][2]
             );
-            context?.fillRect(lastAction[0], lastAction[1], 1, 1);
+            // @ts-ignore
+            context?.fillRect(drawBuffer[key][0], drawBuffer[key][1], 1, 1);
           });
         }
       }
     }
 
     paintOnCanvas();
-  }, [actions, pixels]);
+  }, [drawBuffer]);
+
+  // Handle when actionMode changes
+  // If actionMode has changed to normal, clear the draw buffer, add it to actions
+  // If actionMode has changed to draw, do nothing
+  // If actionMode has changed to eyedropper, do nothing
+  useEffect(() => {
+    if (actionMode === "normal") {
+      console.log("Action mode normal");
+      if (Object.keys(drawBuffer).length > 0) {
+        setActions((prev) => [...prev, drawBuffer]);
+      }
+
+      // Set pixels touched so we can impose pixel change limit
+      setPixelsTouched((prev) => {
+        const tmp = { ...prev };
+        Object.keys(drawBuffer).forEach((key) => {
+          if (key in tmp) {
+            tmp[key] += 1;
+          } else {
+            tmp[key] = 1;
+          }
+        });
+        return tmp;
+      });
+
+      setdrawBuffer({});
+    } else if (actionMode === "draw") {
+      console.log("Action mode draw");
+      setdrawBuffer((prev) => {
+        const tmp = prev;
+        const [r, g, b] = getRgb(color);
+        // @ts-ignore
+        const newPixel: [number, number, Uint8ClampedArray] = [
+          mouseX,
+          mouseY,
+          new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
+        ];
+        // @ts-ignore
+        tmp[[mouseX, mouseY]] = newPixel;
+        return tmp;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actionMode]);
 
   // Update Zoom view everytime a pixel is changed or the mouse moves
-  // FIXME this is not working
   useEffect(() => {
     function paintOnZoomCanvas() {
       const canvas = canvasRef.current;
@@ -224,34 +242,25 @@ export function Board() {
     paintOnZoomCanvas();
   }, [mouseX, mouseY, actions]);
 
+  // Undo function
   function undo() {
     const canvas = canvasRef.current;
     if (canvas && actions.length > 0) {
       const context = canvas.getContext("2d");
       if (context) {
-        const [x, y, prevColour] = actions[actions.length - 1][0];
-        context.fillStyle = getColorStr(
-          prevColour[0],
-          prevColour[1],
-          prevColour[2]
-        );
-        context?.fillRect(x, y, 1, 1);
-
         // Pop out the last element of the array
-        setActions(actions.slice(0, -1));
 
         setPixelsTouched((prev) => {
-          const tmp = prev;
-          // @ts-ignore
-          if ([x, y] in tmp) {
-            // @ts-ignore
-            tmp[[x, y]] -= 1;
-          } else {
-            // @ts-ignore
-            tmp[[x, y]] = 0;
-          }
+          const tmp = { ...prev };
+          Object.keys(actions.slice(-1)[0]).forEach((key) => {
+            // key should always be in setPixelsTouched
+            console.log(key);
+            tmp[key] -= 1;
+          });
           return tmp;
         });
+
+        setActions(actions.slice(0, -1));
       }
     }
   }
@@ -356,8 +365,26 @@ export function Board() {
               setMouseX(x);
               setMouseY(y);
             }}
-            onClick={(e) => {
-              performActionOnCanvas(e);
+            // onClick={(e) => {
+            //   performActionOnCanvas(e);
+            // }}
+            onMouseDown={() => {
+              if (actionMode === "normal") {
+                setActionMode("draw");
+              }
+              if (actionMode === "eyedropper") {
+                const canvas = canvasRef.current;
+                if (canvas) {
+                  const context = canvas.getContext("2d");
+                  if (context) {
+                    const pixel = context.getImageData(mouseX, mouseY, 1, 1);
+                    setColor(uint8torgb(pixel.data));
+                  }
+                }
+              }
+            }}
+            onMouseUp={() => {
+              setActionMode("normal");
             }}
           />
         </div>
