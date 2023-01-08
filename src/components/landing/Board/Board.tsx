@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/landing/Board/SubmitButton";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useBoardPixels } from "@/hooks/useBoardPixels";
 import { getColorStr, getRgb } from "@/utils/color";
+import { MAX_PIXELS } from "@/utils/consts";
 
 const CANVAS_SIZE = {
   width: 500,
@@ -18,8 +19,6 @@ const ZOOM_CANVAS_SIZE = {
   width: 400,
   height: 400,
 };
-
-const MAX_PIXELS = 100;
 
 const ZOOM_SENSITIVITY = 500; // bigger for lower zoom per scroll
 

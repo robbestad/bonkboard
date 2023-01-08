@@ -12,6 +12,7 @@ import {
   BOARD_DATA_ACCOUNT,
   MINT_TOKEN_ACCOUNT,
 } from "@/hooks/useBoardProgram";
+import { MAX_PIXELS } from "@/utils/consts";
 import { txToSimulationLink, txToSolanaFMLink } from "@/utils/links";
 import { findFeeAccount } from "@/utils/token";
 import { signSendConfirm } from "@/utils/transaction";
@@ -74,69 +75,81 @@ export function SubmitButton({
         toSend.push({ coord: { x, y }, color: { r, g, b } });
       });
 
-      const feeAccount = findFeeAccount(
-        boardProgram.programId,
-        new PublicKey(BOARD_ACCOUNT[network])
-      )[0];
-
-      const payerTokenAccount = await getAssociatedTokenAddress(
-        MINT_TOKEN_ACCOUNT[network],
-        wallet.publicKey
-      );
-
-      const { feeDestination } = await boardProgram.account.fee.fetch(
-        feeAccount
-      );
-
-      console.log(toSend);
-
-      tx = await boardProgram.methods
-        .draw(toSend)
-        .accounts({
-          boardAccount: BOARD_ACCOUNT[network],
-          boardDataAccount: BOARD_DATA_ACCOUNT[network],
-          payer: wallet.publicKey,
-          payerTokenAccount,
-          feeAccount,
-          feeDestination,
-        })
-        .transaction();
-
-      const { close: closeProgressSnackbar } = enqueueSnackbar({
-        title: "Bonk in progress",
-        description: `Bonking ${toSend.length} pixels...`,
-        variant: "standard",
-        options: {
-          duration: null,
-        },
-      });
-      closeCurrentSnackbar = closeProgressSnackbar;
-
-      console.log(tx);
-
-      const [sig] = await signSendConfirm(
-        wallet,
-        [{ tx, signers: [] }],
-        connection
-      );
-
-      await mutate();
-
-      resetDrawnPixels();
-
-      closeCurrentSnackbar();
-
-      enqueueSnackbar({
-        title: "Success",
-        description: "Successfully bonked a pixel!",
-        variant: "success",
-        links: [
-          {
-            label: "View on explorer",
-            href: txToSolanaFMLink(sig, network),
+      if (Object.keys(toSend).length > MAX_PIXELS) {
+        enqueueSnackbar({
+          title: "Error",
+          description:
+            "Too many pixels. Please reduce the number of pixels before submitting.",
+          variant: "critical",
+          options: {
+            duration: null,
           },
-        ],
-      });
+        });
+      } else {
+        const feeAccount = findFeeAccount(
+          boardProgram.programId,
+          new PublicKey(BOARD_ACCOUNT[network])
+        )[0];
+
+        const payerTokenAccount = await getAssociatedTokenAddress(
+          MINT_TOKEN_ACCOUNT[network],
+          wallet.publicKey
+        );
+
+        const { feeDestination } = await boardProgram.account.fee.fetch(
+          feeAccount
+        );
+
+        console.log(toSend);
+
+        tx = await boardProgram.methods
+          .draw(toSend)
+          .accounts({
+            boardAccount: BOARD_ACCOUNT[network],
+            boardDataAccount: BOARD_DATA_ACCOUNT[network],
+            payer: wallet.publicKey,
+            payerTokenAccount,
+            feeAccount,
+            feeDestination,
+          })
+          .transaction();
+
+        const { close: closeProgressSnackbar } = enqueueSnackbar({
+          title: "Bonk in progress",
+          description: `Bonking ${toSend.length} pixels...`,
+          variant: "standard",
+          options: {
+            duration: null,
+          },
+        });
+        closeCurrentSnackbar = closeProgressSnackbar;
+
+        console.log(tx);
+
+        const [sig] = await signSendConfirm(
+          wallet,
+          [{ tx, signers: [] }],
+          connection
+        );
+
+        await mutate();
+
+        resetDrawnPixels();
+
+        closeCurrentSnackbar();
+
+        enqueueSnackbar({
+          title: "Success",
+          description: "Successfully bonked a pixel!",
+          variant: "success",
+          links: [
+            {
+              label: "View on explorer",
+              href: txToSolanaFMLink(sig, network),
+            },
+          ],
+        });
+      }
     } catch (err) {
       const links = [
         ...(tx
