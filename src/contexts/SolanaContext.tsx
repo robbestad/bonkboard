@@ -113,7 +113,6 @@ export function SolanaProvider({ children }: PropsWithChildren<{}>) {
     [cluster.network]
   );
 
-  // idk why autoConnect={true} just doesnt work with mobile wallet adapter
   return (
     <ConnectionProvider
       endpoint={endpoint}
@@ -121,7 +120,7 @@ export function SolanaProvider({ children }: PropsWithChildren<{}>) {
         confirmTransactionInitialTimeout: TX_CONFIRM_TIMEOUT_MS,
       }}
     >
-      <WalletProvider wallets={wallets} autoConnect={false}>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <SolanaContext.Provider
             value={useMemo(() => ({ cluster, setCluster }), [cluster])}
