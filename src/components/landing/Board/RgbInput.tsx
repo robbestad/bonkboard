@@ -1,14 +1,13 @@
-import { Dispatch, SetStateAction } from "react";
 import { Flex, Input, InputGroup, InputLeftAddon } from "@chakra-ui/react";
 
 import { getColorStr, getRgb } from "@/utils/color";
 
 type RgbInputProps = {
   color: string;
-  setColor: Dispatch<SetStateAction<string>>;
+  handleRgbChange: (rgb: string) => void;
 };
 
-export function RgbInput({ color, setColor }: RgbInputProps) {
+export function RgbInput({ color, handleRgbChange }: RgbInputProps) {
   const [r, g, b] = getRgb(color);
 
   return (
@@ -24,7 +23,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
               if (v > 255) {
                 v = 255;
               }
-              setColor(getColorStr(v, g, b));
+              handleRgbChange(getColorStr(v, g, b));
             }
           }}
         />
@@ -40,7 +39,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
               if (v > 255) {
                 v = 255;
               }
-              setColor(getColorStr(r, v, b));
+              handleRgbChange(getColorStr(r, v, b));
             }
           }}
         />
@@ -56,7 +55,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
               if (v > 255) {
                 v = 255;
               }
-              setColor(getColorStr(r, g, v));
+              handleRgbChange(getColorStr(r, g, v));
             }
           }}
         />
