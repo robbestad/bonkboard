@@ -4,7 +4,6 @@ import {
   PropsWithChildren,
   SetStateAction,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -15,7 +14,6 @@ import {
 } from "@solana/wallet-adapter-base";
 import {
   ConnectionProvider,
-  useWallet,
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
@@ -115,7 +113,6 @@ export function SolanaProvider({ children }: PropsWithChildren<{}>) {
     [cluster.network]
   );
 
-  // idk why autoConnect={true} just doesnt work with mobile wallet adapter
   return (
     <ConnectionProvider
       endpoint={endpoint}
@@ -123,12 +120,12 @@ export function SolanaProvider({ children }: PropsWithChildren<{}>) {
         confirmTransactionInitialTimeout: TX_CONFIRM_TIMEOUT_MS,
       }}
     >
-      <WalletProvider wallets={wallets} autoConnect={false}>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <SolanaContext.Provider
             value={useMemo(() => ({ cluster, setCluster }), [cluster])}
           >
-            <WalletConnector />
+            {/* <WalletConnector /> */}
             {children}
           </SolanaContext.Provider>
         </WalletModalProvider>
@@ -154,12 +151,12 @@ export function useSolana() {
  * Note: MWA is still wonky af, you cant disconnect from FakeWallet and when you decline
  * it tries again
  */
-function WalletConnector() {
-  const { wallet, connect, connected, connecting, disconnecting } = useWallet();
-  useEffect(() => {
-    if (wallet && !connected && !connecting && !disconnecting) {
-      connect();
-    }
-  }, [wallet, connect, connected, connecting, disconnecting]);
-  return null;
-}
+// function WalletConnector() {
+//   const { wallet, connect, connected, connecting, disconnecting } = useWallet();
+//   useEffect(() => {
+//     if (wallet && !connected && !connecting && !disconnecting) {
+//       connect();
+//     }
+//   }, [wallet, connect, connected, connecting, disconnecting]);
+//   return null;
+// }

@@ -23,11 +23,39 @@ type LayoutProps = {
   children: React.ReactNode;
 };
 
+const SEO = {
+  title: "bonkboard.gg",
+  url: "https://bonkboard.gg",
+  description:
+    "The first pixel grafitti board powered by $BONK. A social experiment for $SOL.",
+};
+
 export function Layout({ title, children }: LayoutProps) {
   return (
     <>
       <Head>
         <title>{title ? `${title} – Bonkboard.gg` : "Bonkboard.gg"}</title>
+
+        <meta name="title" content={SEO.title} />
+        <meta name="description" content={SEO.description} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={SEO.url} />
+        <meta property="og:title" content={SEO.title} />
+        <meta property="og:description" content={SEO.description} />
+        <meta
+          property="og:image"
+          content={`${process.env.VERCEL_URL}/meta_og.jpeg`}
+        />
+
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={SEO.url} />
+        <meta property="twitter:title" content={SEO.title} />
+        <meta property="twitter:description" content={SEO.description} />
+        <meta
+          property="twitter:image"
+          content={`${process.env.VERCEL_URL}/meta_og.jpeg`}
+        />
       </Head>
 
       <Flex

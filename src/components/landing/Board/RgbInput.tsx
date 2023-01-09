@@ -12,7 +12,7 @@ export function RgbInput({ color, setColor }: RgbInputProps) {
   const [r, g, b] = getRgb(color);
 
   return (
-    <Flex gap={2} my={2}>
+    <Flex direction="column" gap={2} mt={2}>
       <InputGroup>
         <InputLeftAddon>r</InputLeftAddon>
         <Input

@@ -1,14 +1,58 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
-import { Button, Grid, GridItem, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Flex,
+  Grid,
+  GridItem,
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  keyframes,
+  Text,
+} from "@chakra-ui/react";
 
 import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useBoardPixels } from "@/hooks/useBoardPixels";
-import { getColorStr, getRgb } from "@/utils/color";
+import { getColorStr, getRgb, hexToRgb, rgbToHex } from "@/utils/color";
 import { MAX_PIXELS } from "@/utils/consts";
+
+const spinner = keyframes`
+  0% {
+    -webkit-filter: hue-rotate(0deg);
+  }
+
+  50% {
+    box-shadow: 35px 35px 0 0,
+                -35px -35px 0 0,
+                35px -35px 0 0,
+                -35px 35px 0 0,
+                0 15px 0 0,
+                15px 0 0 0,
+                -15px 0 0 0,
+                0 -15px 0 0;
+  }
+
+  75% {
+    box-shadow: 35px 35px 0 0,
+                -35px -35px 0 0,
+                35px -35px 0 0,
+                -35px 35px 0 0,
+                0 15px 0 0,
+                15px 0 0 0,
+                -15px 0 0 0,
+                0 -15px 0 0;
+  }
+
+  100% {
+    transform: rotate(360deg);
+    -webkit-filter: hue-rotate(360deg);
+  }
+`;
 
 const CANVAS_SIZE = {
   width: 500,
@@ -28,11 +72,12 @@ function pixelsChanged(o: { [k: string]: number }) {
   return Object.keys(o).reduce((acc, key) => acc + Number(o[key] > 0), 0);
 }
 
-function parse(pixelsChangedNumber: number) {
-  return `Pixels changed: ${pixelsChangedNumber}/${MAX_PIXELS}. BONK cost: ${
-    pixelsChangedNumber * 10000
-  }`;
+function uint8torgb(u: Uint8ClampedArray) {
+  return getColorStr(u[0], u[1], u[2]);
 }
+
+
+const numFormat = new Intl.NumberFormat("en-us");
 
 type ActionMode = "normal" | "eyedropper" | "draw" | "translate";
 
@@ -42,6 +87,9 @@ const MOUSEWHEEL_BUTTON = 1;
 export function Board() {
   const [isPending, setIsPending] = useState(false);
 
+  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+  const [zoomContext, setZoomContext] =
+    useState<CanvasRenderingContext2D | null>(null);
   const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
   const [scale, setScale] = useState<number>(5);
   const [translateX, setTranslateX] = useState<number>(0);
@@ -57,11 +105,25 @@ export function Board() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const hexColor = rgbToHex(color);
+
+  function handleHexChange(hex: string) {
+    const { r, g, b } = hexToRgb(hex);
+    if (!Number.isNaN(r) && !Number.isNaN(g) && !Number.isNaN(b)) {
+      setColor(getColorStr(r, g, b));
+    }
+  }
+
   const { pixels, error, mutate } = useBoardPixels();
 
   const { enqueueSnackbar } = useSnackbarContext();
 
   const pixelsChangedNumber = pixelsChanged(pixelsTouched);
+
+  const totalCost = useMemo(
+    () => numFormat.format(pixelsChangedNumber * 10000),
+    [pixelsChangedNumber]
+  );
 
   useEffect(() => {
     if (error) {
@@ -73,11 +135,25 @@ export function Board() {
     }
   }, [enqueueSnackbar, error]);
 
+  // Set context just once, on load
+  useEffect(() => {
+    const canvasContext = canvasRef.current?.getContext("2d");
+    if (canvasContext) {
+      setContext(canvasContext);
+      canvasContext.imageSmoothingEnabled = false;
+    }
+
+    const zoomCanvasContext = zoomCanvasRef.current?.getContext("2d");
+
+    if (zoomCanvasContext) {
+      setZoomContext(zoomCanvasContext);
+    }
+  }, []);
+
   // Redraw the board every time it changes
   useEffect(() => {
     const canvas = canvasRef.current;
     if (canvas && pixels) {
-      const context = canvas.getContext("2d");
       if (context) {
         // draw something on canvas on load
         // TODO get attr from Box, no magic numbers
@@ -111,63 +187,51 @@ export function Board() {
         });
       }
     }
-  }, [actions, pixels]);
-
-  function uint8torgb(u: Uint8ClampedArray) {
-    return getColorStr(u[0], u[1], u[2]);
-  }
+  }, [actions, pixels, context]);
 
   // Updates the drawbuffer when the mouse moves if the current actionMode is draw
   useEffect(() => {
     if (actionMode === "draw") {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const context = canvas.getContext("2d");
-        if (context) {
-          const [r, g, b] = getRgb(color);
-          // @ts-ignore
-          const newPixel: [number, number, Uint8ClampedArray] = [
-            mouseX,
-            mouseY,
-            new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
-          ];
+      if (context) {
+        const [r, g, b] = getRgb(color);
+        // @ts-ignore
+        const newPixel: [number, number, Uint8ClampedArray] = [
+          mouseX,
+          mouseY,
+          new Uint8ClampedArray([Number(r), Number(g), Number(b), 255]),
+        ];
 
-          setdrawBuffer((prev) => {
-            // @ts-ignore
-            const tmp = { ...prev, [[mouseX, mouseY]]: newPixel };
-            return tmp;
-          });
-        }
+        setdrawBuffer((prev) => {
+          // @ts-ignore
+          const tmp = { ...prev, [[mouseX, mouseY]]: newPixel };
+          return tmp;
+        });
       }
     }
-  }, [mouseX, mouseY, actionMode, color]);
+  }, [mouseX, mouseY, actionMode, color, context]);
 
   // Update canvas every time drawBuffer changes
   useEffect(() => {
     function paintOnCanvas() {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const context = canvas.getContext("2d");
-        if (context && Object.keys(drawBuffer).length > 0) {
-          // @ts-ignore
-          Object.keys(drawBuffer).forEach((key: [number, number]) => {
-            context.fillStyle = getColorStr(
-              // @ts-ignore
-              drawBuffer[key][2][0],
-              // @ts-ignore
-              drawBuffer[key][2][1],
-              // @ts-ignore
-              drawBuffer[key][2][2]
-            );
+      if (context && Object.keys(drawBuffer).length > 0) {
+        // @ts-ignore
+        Object.keys(drawBuffer).forEach((key: [number, number]) => {
+          context.fillStyle = getColorStr(
             // @ts-ignore
-            context?.fillRect(drawBuffer[key][0], drawBuffer[key][1], 1, 1);
-          });
-        }
+            drawBuffer[key][2][0],
+            // @ts-ignore
+            drawBuffer[key][2][1],
+            // @ts-ignore
+            drawBuffer[key][2][2]
+          );
+          // @ts-ignore
+          context?.fillRect(drawBuffer[key][0], drawBuffer[key][1], 1, 1);
+        });
       }
     }
 
     paintOnCanvas();
-  }, [drawBuffer]);
+  }, [drawBuffer, context]);
 
   // Handle when actionMode changes
   // If actionMode has changed to normal, clear the draw buffer, add it to actions
@@ -217,56 +281,66 @@ export function Board() {
   useEffect(() => {
     function paintOnZoomCanvas() {
       const canvas = canvasRef.current;
-      const zoomCanvas = zoomCanvasRef.current;
-      if (canvas && zoomCanvas) {
-        const zoomContext = zoomCanvas.getContext("2d");
-        if (zoomContext) {
-          zoomContext.imageSmoothingEnabled = false;
-          zoomContext.drawImage(
-            canvas,
-            Math.min(Math.max(0, mouseX - 5), CANVAS_SIZE.width - 10),
-            Math.min(Math.max(0, mouseY - 5), CANVAS_SIZE.height - 10),
-            11,
-            11,
-            0,
-            0,
-            ZOOM_CANVAS_SIZE.width,
-            ZOOM_CANVAS_SIZE.height
-          );
-          zoomContext.strokeStyle = "yellow";
-          zoomContext.lineWidth = 3;
-          zoomContext.strokeRect(
-            (ZOOM_CANVAS_SIZE.width - ZOOM_CANVAS_SIZE.width / 11) / 2,
-            (ZOOM_CANVAS_SIZE.height - ZOOM_CANVAS_SIZE.height / 11) / 2,
-            ZOOM_CANVAS_SIZE.width / 11,
-            ZOOM_CANVAS_SIZE.height / 11
-          );
-        }
+      if (canvas && zoomContext) {
+        zoomContext.imageSmoothingEnabled = false;
+        zoomContext.drawImage(
+          canvas,
+          Math.min(Math.max(0, mouseX - 5), CANVAS_SIZE.width - 10),
+          Math.min(Math.max(0, mouseY - 5), CANVAS_SIZE.height - 10),
+          11,
+          11,
+          0,
+          0,
+          ZOOM_CANVAS_SIZE.width,
+          ZOOM_CANVAS_SIZE.height
+        );
+        zoomContext.strokeStyle = "yellow";
+        zoomContext.lineWidth = 3;
+        zoomContext.strokeRect(
+          (ZOOM_CANVAS_SIZE.width - ZOOM_CANVAS_SIZE.width / 11) / 2,
+          (ZOOM_CANVAS_SIZE.height - ZOOM_CANVAS_SIZE.height / 11) / 2,
+          ZOOM_CANVAS_SIZE.width / 11,
+          ZOOM_CANVAS_SIZE.height / 11
+        );
       }
     }
     paintOnZoomCanvas();
-  }, [mouseX, mouseY, actions]);
+  }, [mouseX, mouseY, actions, zoomContext]);
+
+  // zoom
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    function handleWheel(event: WheelEvent) {
+      event.preventDefault();
+
+      if (!context) return;
+
+      setScale(Math.max(scale - event.deltaY / ZOOM_SENSITIVITY, 1));
+    }
+
+    canvas.addEventListener("wheel", handleWheel);
+    // eslint-disable-next-line consistent-return
+    return () => canvas.removeEventListener("wheel", handleWheel);
+  }, [mouseX, mouseY, scale, context]);
 
   // Undo function
   function undo() {
-    const canvas = canvasRef.current;
-    if (canvas && actions.length > 0) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        // Pop out the last element of the array
+    if (context && actions.length > 0) {
+      // Pop out the last element of the array
 
-        setPixelsTouched((prev) => {
-          const tmp = { ...prev };
-          Object.keys(actions.slice(-1)[0]).forEach((key) => {
-            // key should always be in setPixelsTouched
-            console.log(key);
-            tmp[key] -= 1;
-          });
-          return tmp;
+      setPixelsTouched((prev) => {
+        const tmp = { ...prev };
+        Object.keys(actions.slice(-1)[0]).forEach((key) => {
+          // key should always be in setPixelsTouched
+          console.log(key);
+          tmp[key] -= 1;
         });
+        return tmp;
+      });
 
-        setActions(actions.slice(0, -1));
-      }
+      setActions(actions.slice(0, -1));
     }
   }
 
@@ -320,23 +394,11 @@ export function Board() {
     mutate();
   }
 
-  // zoom
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (canvas === null) return;
-
-    function handleWheel(event: WheelEvent) {
-      event.preventDefault();
-      const context = canvas?.getContext("2d");
-      if (context) {
-        setScale(Math.max(scale - event.deltaY / ZOOM_SENSITIVITY, 1));
-      }
-    }
-
-    canvas.addEventListener("wheel", handleWheel);
-    // eslint-disable-next-line consistent-return
-    return () => canvas.removeEventListener("wheel", handleWheel);
-  }, [mouseX, mouseY, scale]);
+  function handleClearImage() {
+    setActions([]);
+    setPixelsTouched({});
+    mutate();
+  }
 
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
@@ -349,10 +411,26 @@ export function Board() {
         alignItems="center"
         overflow="hidden"
       >
-        <div
-          style={{
-            translate: `${translateX}px ${translateY}px`,
-          }}
+        {!pixels ? (
+          <Box
+            w={4}
+            h={4}
+            bg="#f35626"
+            color="#f35626"
+            boxShadow="30px 30px 0 0,
+            -30px -30px 0 0,
+            30px -30px 0 0,
+            -30px 30px 0 0,
+            0 30px 0 0,
+            30px 0 0 0,
+            -30px 0 0 0,
+            0 -30px 0 0"
+            animation={`${spinner} 2s linear infinite`}
+          />
+        ) : null}
+        <Box
+          display={pixels ? "auto" : "none"}
+          sx={{ translate: `${translateX}px ${translateY}px` }}
         >
           <canvas
             // @ts-ignore
@@ -387,15 +465,9 @@ export function Board() {
                 if (actionMode === "normal") {
                   setActionMode("draw");
                 }
-                if (actionMode === "eyedropper") {
-                  const canvas = canvasRef.current;
-                  if (canvas) {
-                    const context = canvas.getContext("2d");
-                    if (context) {
-                      const pixel = context.getImageData(mouseX, mouseY, 1, 1);
-                      setColor(uint8torgb(pixel.data));
-                    }
-                  }
+                if (actionMode === "eyedropper" && context) {
+                  const pixel = context.getImageData(mouseX, mouseY, 1, 1);
+                  setColor(uint8torgb(pixel.data));
                 }
               } else if (button === MOUSEWHEEL_BUTTON) {
                 setActionMode("translate");
@@ -409,7 +481,7 @@ export function Board() {
               }
             }}
           />
-        </div>
+        </Box>
       </GridItem>
 
       <GridItem px={10} pt={4}>
@@ -521,6 +593,21 @@ export function Board() {
         <Button
           variant="outline"
           size="sm"
+          onClick={() => {
+            handleClearImage();
+          }}
+        >
+          <Image
+            src="/icons/Clear.png"
+            priority
+            width={25}
+            height={25}
+            alt="Clear image"
+          />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => handleRefreshImage()}
         >
           Refresh Image
@@ -558,9 +645,28 @@ export function Board() {
           setIsPending={setIsPending}
           resetDrawnPixels={() => resetDrawnPixels()}
         />
-        <Text>{parse(pixelsChangedNumber)}</Text>
-        <RgbStringColorPicker color={color} onChange={setColor} />
-        <RgbInput color={color} setColor={setColor} />
+
+        <Text>
+          Pixels changed: {pixelsChangedNumber}/{MAX_PIXELS}. BONK cost:{" "}
+          {totalCost}
+        </Text>
+
+        <Flex align="center" mb={4}>
+          <RgbStringColorPicker color={color} onChange={setColor} />
+
+          <Box mx={4}>
+            <InputGroup>
+              <InputLeftAddon>#</InputLeftAddon>
+              <Input
+                variant="outline"
+                value={hexColor}
+                onChange={(e) => handleHexChange(e.target.value)}
+              />
+            </InputGroup>
+            <RgbInput color={color} setColor={setColor} />
+          </Box>
+        </Flex>
+
         <canvas
           // @ts-ignore
           ref={zoomCanvasRef}

@@ -1,10 +1,10 @@
-// import Image from "next/image";
-import { Box, HStack, Text } from "@chakra-ui/react";
+import Image from "next/image";
+import { Box, HStack } from "@chakra-ui/react";
 
 import { ConnectionSelector } from "@/components/common/ConnectionSelector";
 import { NextLink } from "@/components/common/NextLink";
 import { WalletButton } from "@/components/common/WalletButton";
-// import logo from "@/public/logo.png";
+import logo from "@/public/logo.png";
 
 export function Header() {
   return (
@@ -29,10 +29,10 @@ export function Header() {
             alignItems="center"
             experimental_spaceX={2}
           >
-            {/* <Image width={48} height={48} src={logo} placeholder="blur" /> */}
-            <Text fontSize="2xl" fontWeight={700}>
+            <Image src={logo} height={48} priority alt="" />
+            {/* <Text fontSize="2xl" fontWeight={700}>
               Bonkboard.gg
-            </Text>
+            </Text> */}
           </NextLink>
         </HStack>
 
