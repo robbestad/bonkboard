@@ -76,7 +76,13 @@ function uint8torgb(u: Uint8ClampedArray) {
   return getColorStr(u[0], u[1], u[2]);
 }
 
+
 const numFormat = new Intl.NumberFormat("en-us");
+
+type ActionMode = "normal" | "eyedropper" | "draw" | "translate";
+
+const LEFT_MOUSE_BUTTON = 0;
+const MOUSEWHEEL_BUTTON = 1;
 
 export function Board() {
   const [isPending, setIsPending] = useState(false);
@@ -91,7 +97,7 @@ export function Board() {
   const [actions, setActions] = useState<any[]>([]);
   const [mouseX, setMouseX] = useState<number>(0);
   const [mouseY, setMouseY] = useState<number>(0);
-  const [actionMode, setActionMode] = useState<string>("normal");
+  const [actionMode, setActionMode] = useState<ActionMode>("normal");
   const [pixelsTouched, setPixelsTouched] = useState<{ [key: string]: number }>(
     {}
   );
@@ -439,23 +445,40 @@ export function Board() {
             }}
             onMouseMove={(e) => {
               const [x, y] = getCursorPosition(e);
-              setMouseX(x);
-              setMouseY(y);
+              if (actionMode === "translate") {
+                const deltaX = x - mouseX;
+                const deltaY = y - mouseY;
+                const panX = deltaX * 2;
+                const panY = deltaY * 2;
+                setTranslateX(translateX + panX);
+                setTranslateY(translateY + panY);
+              } else {
+                setMouseX(x);
+                setMouseY(y);
+              }
             }}
             // onClick={(e) => {
             //   performActionOnCanvas(e);
             // }}
-            onMouseDown={() => {
-              if (actionMode === "normal") {
-                setActionMode("draw");
-              }
-              if (actionMode === "eyedropper" && context) {
-                const pixel = context.getImageData(mouseX, mouseY, 1, 1);
-                setColor(uint8torgb(pixel.data));
+            onMouseDown={({ button }) => {
+              if (button === LEFT_MOUSE_BUTTON) {
+                if (actionMode === "normal") {
+                  setActionMode("draw");
+                }
+                if (actionMode === "eyedropper" && context) {
+                  const pixel = context.getImageData(mouseX, mouseY, 1, 1);
+                  setColor(uint8torgb(pixel.data));
+                }
+              } else if (button === MOUSEWHEEL_BUTTON) {
+                setActionMode("translate");
               }
             }}
-            onMouseUp={() => {
-              setActionMode("normal");
+            onMouseUp={({ button }) => {
+              if (button === LEFT_MOUSE_BUTTON) {
+                setActionMode("normal");
+              } else if (button === MOUSEWHEEL_BUTTON) {
+                setActionMode("normal");
+              }
             }}
           />
         </Box>
