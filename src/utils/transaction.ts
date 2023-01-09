@@ -12,6 +12,7 @@ import {
   Connection,
   SignatureResult,
   Transaction,
+  TransactionExpiredBlockheightExceededError,
   VersionedTransaction,
 } from "@solana/web3.js";
 
@@ -52,11 +53,15 @@ export async function signSendConfirm(
 
   const confirmResults = await Promise.all(
     sigs.map((signature) =>
-      confirmTransactionReinforced(connection, {
-        signature,
-        blockhash,
-        lastValidBlockHeight,
-      })
+      confirmTransactionPoll(
+        connection,
+        {
+          signature,
+          blockhash,
+          lastValidBlockHeight,
+        },
+        confirmOptions?.commitment
+      )
     )
   );
 
@@ -102,53 +107,87 @@ export function deserializeVersionedTx(tx: string): VersionedTransaction {
   return versionedTx;
 }
 
-export async function confirmTransactionReinforced(
+export async function confirmTransactionPoll(
   connection: Connection,
   strategy: BlockheightBasedTransactionConfirmationStrategy,
   commitment?: Commitment
 ): Promise<SignatureResult> {
   const GET_SIGNATURE_STATUS_POLL_INTERVAL_MS = 1500;
-  let interval: ReturnType<typeof setInterval> | undefined;
-  // periodically poll getSignatureStatus()
+  const GET_LATEST_BLOCKHEIGHT_POLL_INTERVAL_MS = 1500;
+
+  const selectedCommitment = commitment ?? connection.commitment ?? "confirmed";
+  // idk how to differentiate between "processed" and "confirmed"
+  let confirmationsRequired = 1;
+  if (selectedCommitment === "finalized") {
+    confirmationsRequired = 32;
+  }
+
+  let getSignatureTimeout: ReturnType<typeof setTimeout> | undefined;
+  const getSignatureCbChain = async (
+    resolve: (value: SignatureResult) => void
+  ) => {
+    getSignatureTimeout = setTimeout(async () => {
+      const { value } = await connection.getSignatureStatus(strategy.signature);
+      // should theoretically be confirmationStatus >= selectedCommitment ("finalized" > "confirmed")
+      if (
+        value &&
+        ((value.confirmations !== null &&
+          value.confirmations >= confirmationsRequired) ||
+          (value.confirmationStatus !== undefined &&
+            value.confirmationStatus === selectedCommitment))
+      ) {
+        resolve(value);
+        return;
+      }
+      if (getSignatureTimeout !== undefined) {
+        getSignatureCbChain(resolve);
+      }
+    }, GET_SIGNATURE_STATUS_POLL_INTERVAL_MS);
+  };
   const getSignatureStatusPromise: Promise<SignatureResult> = new Promise(
     (resolve) => {
-      const selectedCommitment =
-        commitment ?? connection.commitment ?? "confirmed";
-      // idk how to differentiate between "processed" and "confirmed"
-      let confirmationsRequired = 1;
-      if (selectedCommitment === "finalized") {
-        confirmationsRequired = 32;
-      }
-      interval = setInterval(async () => {
-        const { value } = await connection.getSignatureStatus(
-          strategy.signature
-        );
-        // should theoretically be confirmationStatus >= selectedCommitment ("finalized" > "confirmed")
-        if (
-          value &&
-          ((value.confirmations !== null &&
-            value.confirmations >= confirmationsRequired) ||
-            (value.confirmationStatus !== undefined &&
-              value.confirmationStatus === selectedCommitment))
-        ) {
-          resolve(value);
-        }
-      }, GET_SIGNATURE_STATUS_POLL_INTERVAL_MS);
+      getSignatureCbChain(resolve);
     }
   );
+
+  let checkTxExpiredTimeout: ReturnType<typeof setTimeout> | undefined;
+  const checkTxExpiredCbChain = async (
+    resolve: (value: SignatureResult) => void
+  ) => {
+    checkTxExpiredTimeout = setTimeout(async () => {
+      const blockheight = await connection.getBlockHeight(selectedCommitment);
+      if (blockheight > strategy.lastValidBlockHeight) {
+        resolve({
+          err: new TransactionExpiredBlockheightExceededError(
+            strategy.signature
+          ),
+        });
+        return;
+      }
+      if (checkTxExpiredTimeout !== undefined) {
+        checkTxExpiredCbChain(resolve);
+      }
+    }, GET_LATEST_BLOCKHEIGHT_POLL_INTERVAL_MS);
+  };
+  const checkTxExpiredPromise: Promise<SignatureResult> = new Promise(
+    (resolve) => {
+      checkTxExpiredCbChain(resolve);
+    }
+  );
+
   const res = await Promise.race([
-    /*
-    // disable confirmTransaction for now,
-    // spams RPC with getLatestBlockhash every 1s for no reason
-    // since websocket isnt working
-    connection
-      .confirmTransaction(strategy, commitment)
-      .then(({ value }) => value),
-    */
     getSignatureStatusPromise,
+    checkTxExpiredPromise,
   ]);
-  if (interval !== undefined) {
-    clearInterval(interval);
+
+  if (getSignatureTimeout !== undefined) {
+    clearTimeout(getSignatureTimeout);
+    getSignatureTimeout = undefined;
   }
+  if (checkTxExpiredTimeout !== undefined) {
+    clearTimeout(checkTxExpiredTimeout);
+    checkTxExpiredTimeout = undefined;
+  }
+
   return res;
 }
