@@ -6,8 +6,11 @@ import {
 } from "@soceanfi/stake-pool-sdk";
 import { WalletNotConnectedError } from "@solana/wallet-adapter-base";
 import {
+  BlockheightBasedTransactionConfirmationStrategy,
+  Commitment,
   ConfirmOptions,
   Connection,
+  SignatureResult,
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -49,7 +52,7 @@ export async function signSendConfirm(
 
   const confirmResults = await Promise.all(
     sigs.map((signature) =>
-      connection.confirmTransaction({
+      confirmTransactionReinforced(connection, {
         signature,
         blockhash,
         lastValidBlockHeight,
@@ -57,7 +60,7 @@ export async function signSendConfirm(
     )
   );
 
-  confirmResults.forEach(({ value: { err } }) => {
+  confirmResults.forEach(({ err }) => {
     // eslint-disable-next-line @typescript-eslint/no-throw-literal
     if (err) throw err;
   });
@@ -97,4 +100,55 @@ export function deserializeVersionedTx(tx: string): VersionedTransaction {
   const txBuf = Buffer.from(tx, "base64");
   const versionedTx = VersionedTransaction.deserialize(txBuf);
   return versionedTx;
+}
+
+export async function confirmTransactionReinforced(
+  connection: Connection,
+  strategy: BlockheightBasedTransactionConfirmationStrategy,
+  commitment?: Commitment
+): Promise<SignatureResult> {
+  const GET_SIGNATURE_STATUS_POLL_INTERVAL_MS = 1500;
+  let interval: ReturnType<typeof setInterval> | undefined;
+  // periodically poll getSignatureStatus()
+  const getSignatureStatusPromise: Promise<SignatureResult> = new Promise(
+    (resolve) => {
+      const selectedCommitment =
+        commitment ?? connection.commitment ?? "confirmed";
+      // idk how to differentiate between "processed" and "confirmed"
+      let confirmationsRequired = 1;
+      if (selectedCommitment === "finalized") {
+        confirmationsRequired = 32;
+      }
+      interval = setInterval(async () => {
+        const { value } = await connection.getSignatureStatus(
+          strategy.signature
+        );
+        // should theoretically be confirmationStatus >= selectedCommitment ("finalized" > "confirmed")
+        if (
+          value &&
+          ((value.confirmations !== null &&
+            value.confirmations >= confirmationsRequired) ||
+            (value.confirmationStatus !== undefined &&
+              value.confirmationStatus === selectedCommitment))
+        ) {
+          resolve(value);
+        }
+      }, GET_SIGNATURE_STATUS_POLL_INTERVAL_MS);
+    }
+  );
+  const res = await Promise.race([
+    /*
+    // disable confirmTransaction for now,
+    // spams RPC with getLatestBlockhash every 1s for no reason
+    // since websocket isnt working
+    connection
+      .confirmTransaction(strategy, commitment)
+      .then(({ value }) => value),
+    */
+    getSignatureStatusPromise,
+  ]);
+  if (interval !== undefined) {
+    clearInterval(interval);
+  }
+  return res;
 }
