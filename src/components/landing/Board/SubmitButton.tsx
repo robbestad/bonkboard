@@ -182,7 +182,7 @@ export function SubmitButton({
   };
 
   return (
-    <Button size="lg" onClick={handleSubmit} isLoading={isPending}>
+    <Button onClick={handleSubmit} isLoading={isPending}>
       Submit!
     </Button>
   );
