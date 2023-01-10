@@ -85,6 +85,8 @@ type ActionMode = "normal" | "eyedropper" | "draw" | "translate";
 const LEFT_MOUSE_BUTTON = 0;
 const MOUSEWHEEL_BUTTON = 1;
 
+const DEFAULT_SCALE = 5;
+
 export function Board() {
   const [isPending, setIsPending] = useState(false);
 
@@ -93,7 +95,7 @@ export function Board() {
     useState<CanvasRenderingContext2D | null>(null);
   const [hexColor, setHexColor] = useState<string>("000000");
   const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
-  const [scale, setScale] = useState<number>(5);
+  const [scale, setScale] = useState<number>(DEFAULT_SCALE);
   const [translateX, setTranslateX] = useState<number>(0);
   const [translateY, setTranslateY] = useState<number>(0);
   const [actions, setActions] = useState<any[]>([]);
@@ -342,7 +344,7 @@ export function Board() {
   }, [mouseX, mouseY, scale, context]);
 
   // Undo function
-  function undo() {
+  const undo = () => {
     if (context && actions.length > 0) {
       // Pop out the last element of the array
 
@@ -358,7 +360,7 @@ export function Board() {
 
       setActions(actions.slice(0, -1));
     }
-  }
+  };
 
   function getCursorPosition(event: any) {
     const canvas = canvasRef.current;
@@ -371,50 +373,56 @@ export function Board() {
     return [-1, -1];
   }
 
-  function zoomIn() {
+  const zoomIn = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       setScale(scale + 1);
     }
-  }
+  };
 
-  function zoomOut() {
+  const zoomOut = () => {
     const canvas = canvasRef.current;
     if (canvas) {
       setScale(Math.max(scale - 1, 1));
     }
-  }
+  };
 
-  function panLeft() {
+  const panLeft = () => {
     setTranslateX(translateX + 40);
-  }
+  };
 
-  function panRight() {
+  const panRight = () => {
     setTranslateX(translateX - 40);
-  }
+  };
 
-  function panUp() {
+  const panUp = () => {
     setTranslateY(translateY + 40);
-  }
+  };
 
-  function panDown() {
+  const panDown = () => {
     setTranslateY(translateY - 40);
-  }
+  };
 
-  function resetDrawnPixels() {
+  const resetDrawnPixels = () => {
     setActions([]);
     setPixelsTouched({});
-  }
+  };
 
-  function handleRefreshImage() {
+  const handleRefreshImage = () => {
     mutate();
-  }
+  };
 
-  function handleClearImage() {
+  const handleClearImage = () => {
     setActions([]);
     setPixelsTouched({});
     mutate();
-  }
+  };
+
+  const handleResetZoom = () => {
+    setScale(DEFAULT_SCALE);
+    setTranslateX(0);
+    setTranslateY(0);
+  };
 
   return (
     // <Flex direction="column" align="center" justify="center" gap={8}>
@@ -501,13 +509,7 @@ export function Board() {
       </GridItem>
 
       <GridItem px={10} pt={4}>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            zoomIn();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={zoomIn}>
           <Image
             src="/icons/Increase.png"
             priority
@@ -516,13 +518,7 @@ export function Board() {
             alt="Zoom in"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            zoomOut();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={zoomOut}>
           <Image
             src="/icons/Reduce.png"
             priority
@@ -531,13 +527,7 @@ export function Board() {
             alt="Zoom out"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panLeft();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={panLeft}>
           <Image
             src="/icons/Left.png"
             priority
@@ -546,13 +536,7 @@ export function Board() {
             alt="Pan left"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panRight();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={panRight}>
           <Image
             src="/icons/Right.png"
             priority
@@ -561,13 +545,7 @@ export function Board() {
             alt="Pan right"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panUp();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={panUp}>
           <Image
             src="/icons/Up.png"
             priority
@@ -576,13 +554,7 @@ export function Board() {
             alt="Pan up"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            panDown();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={panDown}>
           <Image
             src="/icons/Down.png"
             priority
@@ -591,13 +563,7 @@ export function Board() {
             alt="Pan down"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            undo();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={undo}>
           <Image
             src="/icons/Back.png"
             priority
@@ -606,13 +572,7 @@ export function Board() {
             alt="Undo"
           />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            handleClearImage();
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={handleClearImage}>
           <Image
             src="/icons/Clear.png"
             priority
@@ -620,13 +580,6 @@ export function Board() {
             height={25}
             alt="Clear image"
           />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleRefreshImage()}
-        >
-          Refresh Image
         </Button>
         <Button
           variant={actionMode !== "eyedropper" ? "outline" : "solid"}
@@ -654,12 +607,17 @@ export function Board() {
           />
           Eyedropper Mode
         </Button>
-
+        <Button variant="outline" size="sm" onClick={handleRefreshImage}>
+          Refresh Image
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleResetZoom}>
+          Reset Zoom
+        </Button>
         <SubmitButton
           actions={actions}
           isPending={isPending}
           setIsPending={setIsPending}
-          resetDrawnPixels={() => resetDrawnPixels()}
+          resetDrawnPixels={resetDrawnPixels}
         />
 
         <Text>
