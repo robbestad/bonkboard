@@ -137,12 +137,6 @@ export function Board() {
   // Disable page scrolling with arrow keys and space
   usePreventKeyboardScrolling();
 
-  // Handle arrow keys navigation
-  useKey("ArrowUp", panUp, {}, [translateY]);
-  useKey("ArrowDown", panDown, {}, [translateY]);
-  useKey("ArrowRight", panRight, {}, [translateX]);
-  useKey("ArrowLeft", panLeft, {}, [translateX]);
-
   useEffect(() => {
     if (error) {
       enqueueSnackbar({
@@ -402,6 +396,12 @@ export function Board() {
   const panDown = () => {
     setTranslateY(translateY - 40);
   };
+
+  // Handle arrow keys navigation
+  useKey("ArrowUp", panUp, {}, [translateY]);
+  useKey("ArrowDown", panDown, {}, [translateY]);
+  useKey("ArrowRight", panRight, {}, [translateX]);
+  useKey("ArrowLeft", panLeft, {}, [translateX]);
 
   const resetDrawnPixels = () => {
     setActions([]);
