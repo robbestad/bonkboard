@@ -43,19 +43,13 @@ export function Layout({ title, children }: LayoutProps) {
         <meta property="og:url" content={SEO.url} />
         <meta property="og:title" content={SEO.title} />
         <meta property="og:description" content={SEO.description} />
-        <meta
-          property="og:image"
-          content={`${process.env.VERCEL_URL}/meta_og.jpeg`}
-        />
+        <meta property="og:image" content={`${SEO.url}/meta_og.jpeg`} />
 
         <meta property="twitter:card" content="summary_large_image" />
         <meta property="twitter:url" content={SEO.url} />
         <meta property="twitter:title" content={SEO.title} />
         <meta property="twitter:description" content={SEO.description} />
-        <meta
-          property="twitter:image"
-          content={`${process.env.VERCEL_URL}/meta_og.jpeg`}
-        />
+        <meta property="twitter:image" content={`${SEO.url}/meta_og.jpeg`} />
       </Head>
 
       <Flex
