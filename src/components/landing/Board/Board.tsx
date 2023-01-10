@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
+import { useKey } from "react-use";
 import {
   Box,
   Button,
@@ -18,6 +19,7 @@ import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
 import { useBoardPixels } from "@/hooks/useBoardPixels";
+import { usePreventKeyboardScrolling } from "@/hooks/usePreventKeyboardScrolling";
 import { getColorStr, getRgb, hexToRgb, rgbToHex } from "@/utils/color";
 import { MAX_PIXELS } from "@/utils/consts";
 
@@ -129,6 +131,15 @@ export function Board() {
     () => numFormat.format(pixelsChangedNumber * 10000),
     [pixelsChangedNumber]
   );
+
+  // Disable page scrolling with arrow keys and space
+  usePreventKeyboardScrolling();
+
+  // Handle arrow keys navigation
+  useKey("ArrowUp", panUp, {}, [translateY]);
+  useKey("ArrowDown", panDown, {}, [translateY]);
+  useKey("ArrowRight", panRight, {}, [translateX]);
+  useKey("ArrowLeft", panLeft, {}, [translateX]);
 
   useEffect(() => {
     if (error) {
