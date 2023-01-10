@@ -76,7 +76,6 @@ function uint8torgb(u: Uint8ClampedArray) {
   return getColorStr(u[0], u[1], u[2]);
 }
 
-
 const numFormat = new Intl.NumberFormat("en-us");
 
 type ActionMode = "normal" | "eyedropper" | "draw" | "translate";
@@ -90,6 +89,7 @@ export function Board() {
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [zoomContext, setZoomContext] =
     useState<CanvasRenderingContext2D | null>(null);
+  const [hexColor, setHexColor] = useState<string>("000000");
   const [color, setColor] = useState<string>(getColorStr(0, 0, 0));
   const [scale, setScale] = useState<number>(5);
   const [translateX, setTranslateX] = useState<number>(0);
@@ -105,10 +105,15 @@ export function Board() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const zoomCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const hexColor = rgbToHex(color);
+  const handleRgbChange = (rgb: string) => {
+    const hex = rgbToHex(rgb);
+    setColor(rgb);
+    setHexColor(hex);
+  };
 
   function handleHexChange(hex: string) {
     const { r, g, b } = hexToRgb(hex);
+    setHexColor(hex);
     if (!Number.isNaN(r) && !Number.isNaN(g) && !Number.isNaN(b)) {
       setColor(getColorStr(r, g, b));
     }
@@ -652,7 +657,10 @@ export function Board() {
         </Text>
 
         <Flex align="center" mb={4}>
-          <RgbStringColorPicker color={color} onChange={setColor} />
+          <RgbStringColorPicker
+            color={color}
+            onChange={(rgb) => handleRgbChange(rgb)}
+          />
 
           <Box mx={4}>
             <InputGroup>
@@ -663,7 +671,7 @@ export function Board() {
                 onChange={(e) => handleHexChange(e.target.value)}
               />
             </InputGroup>
-            <RgbInput color={color} setColor={setColor} />
+            <RgbInput color={color} handleRgbChange={handleRgbChange} />
           </Box>
         </Flex>
 
