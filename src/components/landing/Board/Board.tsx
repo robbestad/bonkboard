@@ -564,12 +564,6 @@ export function Board() {
             alt="Clear image"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={handleRefreshImage}>
-          Refresh Image
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleResetZoom}>
-          Reset Zoom
-        </Button>
         <Button
           variant={actionMode !== "eyedropper" ? "outline" : "solid"}
           size="sm"
@@ -596,7 +590,12 @@ export function Board() {
           />
           Eyedropper Mode
         </Button>
-
+        <Button variant="outline" size="sm" onClick={handleRefreshImage}>
+          Refresh Image
+        </Button>
+        <Button variant="outline" size="sm" onClick={handleResetZoom}>
+          Reset Zoom
+        </Button>
         <SubmitButton
           actions={actions}
           isPending={isPending}
