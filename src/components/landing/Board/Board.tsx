@@ -15,6 +15,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 
+import { HowToDraw } from "@/components/landing/Board/HowToDraw";
 import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
 import { useSnackbarContext } from "@/contexts/SnackbarContext";
@@ -425,8 +426,6 @@ export function Board() {
   };
 
   return (
-    // <Flex direction="column" align="center" justify="center" gap={8}>
-
     <Grid templateColumns="3fr 1fr" minHeight="calc(100% - 96px - 1px)">
       <GridItem
         backgroundColor="rgb(255,230,220)"
@@ -434,6 +433,7 @@ export function Board() {
         justifyContent="center"
         alignItems="center"
         overflow="hidden"
+        position="relative"
       >
         {!pixels ? (
           <Box
@@ -506,6 +506,8 @@ export function Board() {
             }}
           />
         </Box>
+
+        <HowToDraw limit={MAX_PIXELS} />
       </GridItem>
 
       <GridItem px={10} pt={4}>
@@ -656,6 +658,5 @@ export function Board() {
         />
       </GridItem>
     </Grid>
-    //  </Flex>
   );
 }
