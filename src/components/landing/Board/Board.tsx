@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { RgbStringColorPicker } from "react-colorful";
 import { useKey } from "react-use";
@@ -67,7 +67,8 @@ const ZOOM_CANVAS_SIZE = {
   height: 400,
 };
 
-const ZOOM_SENSITIVITY = 500; // bigger for lower zoom per scroll
+const ZOOM_SENSITIVITY = 100; // bigger for lower zoom per scroll
+const ZOOM_MULTIPLIER = 1.1;
 
 // Count all the non-zero values of keys in o
 // Used to count the number of unique changed pixels
@@ -321,6 +322,17 @@ export function Board() {
   }, [mouseX, mouseY, actions, zoomContext]);
 
   // zoom
+  const zoom = useCallback(
+    (delta: number) => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const multiplier = ZOOM_MULTIPLIER ** delta;
+        setScale(scale * multiplier);
+      }
+    },
+    [scale]
+  );
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -330,13 +342,14 @@ export function Board() {
 
       if (!context) return;
 
-      setScale(Math.max(scale - event.deltaY / ZOOM_SENSITIVITY, 1));
+      const delta = -event.deltaY / ZOOM_SENSITIVITY;
+      zoom(delta);
     }
 
     canvas.addEventListener("wheel", handleWheel);
     // eslint-disable-next-line consistent-return
     return () => canvas.removeEventListener("wheel", handleWheel);
-  }, [mouseX, mouseY, scale, context]);
+  }, [mouseX, mouseY, scale, context, zoom]);
 
   // Undo function
   const undo = () => {
@@ -371,14 +384,14 @@ export function Board() {
   const zoomIn = () => {
     const canvas = canvasRef.current;
     if (canvas) {
-      setScale(scale + 1);
+      zoom(1);
     }
   };
 
   const zoomOut = () => {
     const canvas = canvasRef.current;
     if (canvas) {
-      setScale(Math.max(scale - 1, 1));
+      zoom(-1);
     }
   };
 
