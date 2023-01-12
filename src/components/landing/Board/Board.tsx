@@ -322,16 +322,13 @@ export function Board() {
   }, [mouseX, mouseY, actions, zoomContext]);
 
   // zoom
-  const zoom = useCallback(
-    (delta: number) => {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const multiplier = ZOOM_MULTIPLIER ** delta;
-        setScale(scale * multiplier);
-      }
-    },
-    [scale]
-  );
+  const zoom = useCallback((delta: number) => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const multiplier = ZOOM_MULTIPLIER ** delta;
+      setScale((prevScale) => prevScale * multiplier);
+    }
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
