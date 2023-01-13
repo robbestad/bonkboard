@@ -5,7 +5,7 @@ import { useKey } from "react-use";
 import {
   Box,
   Button,
-  Flex,
+  Center,
   Grid,
   GridItem,
   Input,
@@ -436,7 +436,7 @@ export function Board() {
   };
 
   return (
-    <Grid templateColumns="3fr 1fr" minHeight="calc(100% - 96px - 1px)">
+    <Grid templateColumns="3fr 200px" minHeight="calc(100% - 96px - 1px)">
       <GridItem
         backgroundColor="rgb(255,230,220)"
         display="flex"
@@ -518,84 +518,156 @@ export function Board() {
         </Box>
 
         <HowToDraw limit={MAX_PIXELS} />
+        <canvas
+          // @ts-ignore
+          ref={zoomCanvasRef}
+          width={ZOOM_CANVAS_SIZE.width}
+          height={ZOOM_CANVAS_SIZE.height}
+          style={{
+            imageRendering: "pixelated",
+            border: "1px solid black",
+            position: "fixed",
+            right: 200,
+            bottom: 0,
+          }}
+        />
       </GridItem>
 
-      <GridItem px={10} pt={4}>
-        <Button variant="outline" size="sm" onClick={zoomIn}>
+      <GridItem px={0} pt={0} w={200} mx="auto">
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={zoomIn}
+        >
           <Image
             src="/icons/Increase.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Zoom in"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={zoomOut}>
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={zoomOut}
+        >
           <Image
             src="/icons/Reduce.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Zoom out"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={panLeft}>
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={handleResetZoom}
+        >
+          <Image
+            src="/icons/Resize.png"
+            priority
+            width={24}
+            height={24}
+            alt="Reset Zoom"
+          />
+        </Button>
+        <br />
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={panLeft}
+        >
           <Image
             src="/icons/Left.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Pan left"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={panRight}>
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={panRight}
+        >
           <Image
             src="/icons/Right.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Pan right"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={panUp}>
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={panUp}
+        >
           <Image
             src="/icons/Up.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Pan up"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={panDown}>
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={panDown}
+        >
           <Image
             src="/icons/Down.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Pan down"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={undo}>
+        <br />
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={undo}
+        >
           <Image
             src="/icons/Back.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Undo"
           />
         </Button>
-        <Button variant="outline" size="sm" onClick={handleClearImage}>
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={handleClearImage}
+        >
           <Image
             src="/icons/Clear.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Clear image"
           />
         </Button>
         <Button
-          variant={actionMode !== "eyedropper" ? "outline" : "solid"}
-          size="sm"
+          variant={actionMode !== "eyedropper" ? "ghost" : "solid"}
+          backgroundColor={
+            actionMode === "eyedropper" ? "black" : "transparent"
+          }
+          padding="0"
           onClick={() => {
             if (actionMode === "eyedropper") {
               setActionMode("normal");
@@ -607,8 +679,8 @@ export function Board() {
           <Image
             src="/icons/Eyedropper.png"
             priority
-            width={25}
-            height={25}
+            width={24}
+            height={24}
             alt="Eyedropper"
             style={{
               transition: "filter 300ms ease 0s",
@@ -617,33 +689,43 @@ export function Board() {
               }),
             }}
           />
-          Eyedropper Mode
+          {/* Eyedropper Mode */}
         </Button>
-        <Button variant="outline" size="sm" onClick={handleRefreshImage}>
-          Refresh Image
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleResetZoom}>
-          Reset Zoom
-        </Button>
-        <SubmitButton
-          actions={actions}
-          isPending={isPending}
-          setIsPending={setIsPending}
-          resetDrawnPixels={resetDrawnPixels}
-        />
-
-        <Text>
-          Pixels changed: {pixelsChangedNumber}/{MAX_PIXELS}. BONK cost:{" "}
-          {totalCost}
-        </Text>
-
-        <Flex align="center" mb={4}>
-          <RgbStringColorPicker
-            color={color}
-            onChange={(rgb) => handleRgbChange(rgb)}
+        <Button
+          backgroundColor="transparent"
+          variant="ghost"
+          padding="0"
+          onClick={handleRefreshImage}
+        >
+          <Image
+            src="/icons/Refresh.png"
+            priority
+            width={24}
+            height={24}
+            alt="Refresh"
           />
+        </Button>
+        <Center>
+          <SubmitButton
+            actions={actions}
+            isPending={isPending}
+            setIsPending={setIsPending}
+            resetDrawnPixels={resetDrawnPixels}
+          />
+        </Center>
+        <Text px={1}>
+          Pixels changed: {pixelsChangedNumber}/{MAX_PIXELS}.
+        </Text>
+        <Text px={1}>BONK cost: {totalCost}</Text>
 
-          <Box mx={4}>
+        <Grid mb={4} maxW={ZOOM_CANVAS_SIZE.width / 2}>
+          <GridItem>
+            <RgbStringColorPicker
+              color={color}
+              onChange={(rgb) => handleRgbChange(rgb)}
+            />
+          </GridItem>
+          <GridItem mt={4}>
             <InputGroup>
               <InputLeftAddon>#</InputLeftAddon>
               <Input
@@ -653,10 +735,11 @@ export function Board() {
               />
             </InputGroup>
             <RgbInput color={color} handleRgbChange={handleRgbChange} />
-          </Box>
-        </Flex>
+          </GridItem>
+        </Grid>
+      </GridItem>
 
-        <canvas
+      {/* <canvas
           // @ts-ignore
           ref={zoomCanvasRef}
           width={ZOOM_CANVAS_SIZE.width}
@@ -665,8 +748,7 @@ export function Board() {
             imageRendering: "pixelated",
             border: "1px solid black",
           }}
-        />
-      </GridItem>
+        /> */}
     </Grid>
   );
 }
