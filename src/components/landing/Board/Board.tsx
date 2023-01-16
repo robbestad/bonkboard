@@ -15,6 +15,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 
+import ControlButton from "@/components/landing/Board/ControlButton";
 import { HowToDraw } from "@/components/landing/Board/HowToDraw";
 import { RgbInput } from "@/components/landing/Board/RgbInput";
 import { SubmitButton } from "@/components/landing/Board/SubmitButton";
@@ -436,7 +437,12 @@ export function Board() {
   };
 
   return (
-    <Grid templateColumns="3fr 1fr" minHeight="calc(100% - 96px - 1px)">
+    <Grid
+      templateColumns={{ md: "3fr 1fr", sm: "1fr", base: "1fr" }}
+      minHeight="calc(100% - 96px - 1px)"
+      overflow="scroll"
+      maxW="100vw"
+    >
       <GridItem
         backgroundColor="rgb(255,230,220)"
         display="flex"
@@ -491,6 +497,20 @@ export function Board() {
                 setMouseY(y);
               }
             }}
+            onTouchMove={(e) => {
+              const [x, y] = getCursorPosition(e);
+              if (actionMode === "translate") {
+                const deltaX = x - mouseX;
+                const deltaY = y - mouseY;
+                const panX = deltaX * 2;
+                const panY = deltaY * 2;
+                setTranslateX(translateX + panX);
+                setTranslateY(translateY + panY);
+              } else {
+                setMouseX(x);
+                setMouseY(y);
+              }
+            }}
             // onClick={(e) => {
             //   performActionOnCanvas(e);
             // }}
@@ -520,124 +540,114 @@ export function Board() {
         <HowToDraw limit={MAX_PIXELS} />
       </GridItem>
 
-      <GridItem px={10} pt={4}>
-        <Button variant="outline" size="sm" onClick={zoomIn}>
-          <Image
+      <GridItem px={{ base: 2, md: 10 }} pt={4}>
+        <Grid
+          templateColumns={{ md: "1fr 1fr", base: "1fr 1fr 1fr 1fr" }}
+          templateRows={{ md: "", base: "1fr 1fr " }}
+          gap={2}
+          pb={4}
+        >
+          <ControlButton
+            onClick={zoomIn}
             src="/icons/Increase.png"
-            priority
-            width={25}
-            height={25}
-            alt="Zoom in"
+            alt="Zoom In"
           />
-        </Button>
-        <Button variant="outline" size="sm" onClick={zoomOut}>
-          <Image
+          <ControlButton
+            onClick={zoomOut}
             src="/icons/Reduce.png"
-            priority
-            width={25}
-            height={25}
-            alt="Zoom out"
+            alt="Zoom Out"
           />
-        </Button>
-        <Button variant="outline" size="sm" onClick={panLeft}>
-          <Image
-            src="/icons/Left.png"
-            priority
-            width={25}
-            height={25}
-            alt="Pan left"
-          />
-        </Button>
-        <Button variant="outline" size="sm" onClick={panRight}>
-          <Image
-            src="/icons/Right.png"
-            priority
-            width={25}
-            height={25}
-            alt="Pan right"
-          />
-        </Button>
-        <Button variant="outline" size="sm" onClick={panUp}>
-          <Image
-            src="/icons/Up.png"
-            priority
-            width={25}
-            height={25}
-            alt="Pan up"
-          />
-        </Button>
-        <Button variant="outline" size="sm" onClick={panDown}>
-          <Image
-            src="/icons/Down.png"
-            priority
-            width={25}
-            height={25}
-            alt="Pan down"
-          />
-        </Button>
-        <Button variant="outline" size="sm" onClick={undo}>
-          <Image
-            src="/icons/Back.png"
-            priority
-            width={25}
-            height={25}
-            alt="Undo"
-          />
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleClearImage}>
-          <Image
+          <ControlButton onClick={undo} src="/icons/Back.png" alt="Undo" />
+          <ControlButton
+            onClick={handleClearImage}
             src="/icons/Clear.png"
-            priority
-            width={25}
-            height={25}
-            alt="Clear image"
+            alt="Clear"
           />
-        </Button>
-        <Button
-          variant={actionMode !== "eyedropper" ? "outline" : "solid"}
-          size="sm"
-          onClick={() => {
-            if (actionMode === "eyedropper") {
-              setActionMode("normal");
-            } else {
-              setActionMode("eyedropper");
-            }
+          <ControlButton
+            onClick={panLeft}
+            src="/icons/Left.png"
+            alt="Pan Left"
+          />
+          <ControlButton
+            onClick={panRight}
+            src="/icons/Right.png"
+            alt="Pan Right"
+          />
+          <ControlButton onClick={panUp} src="/icons/Up.png" alt="Pan Up" />
+          <ControlButton
+            onClick={panDown}
+            src="/icons/Down.png"
+            alt="Pan Down"
+          />
+        </Grid>
+
+        <Grid
+          gap={2}
+          alignItems="center"
+          justifyContent="center"
+          templateColumns={{ md: "1fr 1fr", base: "1fr 1fr" }}
+          templateRows={{ md: "", base: "" }}
+        >
+          <Button
+            variant={actionMode !== "eyedropper" ? "outline" : "solid"}
+            size="sm"
+            onClick={() => {
+              if (actionMode === "eyedropper") {
+                setActionMode("normal");
+              } else {
+                setActionMode("eyedropper");
+              }
+            }}
+          >
+            <Image
+              src="/icons/Eyedropper.png"
+              priority
+              width={25}
+              height={25}
+              alt="Eyedropper"
+              style={{
+                transition: "filter 300ms ease 0s",
+                ...(actionMode === "eyedropper" && {
+                  filter: "invert(1)",
+                }),
+              }}
+            />
+            Eyedropper Mode
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRefreshImage}>
+            Refresh Image
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleResetZoom}>
+            Reset Zoom
+          </Button>
+          <SubmitButton
+            actions={actions}
+            isPending={isPending}
+            setIsPending={setIsPending}
+            resetDrawnPixels={resetDrawnPixels}
+          />
+        </Grid>
+
+        <Flex gap={2} alignItems="center" justifyContent="center" />
+
+        <Text
+          display={{
+            base: "none",
+            md: "block",
           }}
         >
-          <Image
-            src="/icons/Eyedropper.png"
-            priority
-            width={25}
-            height={25}
-            alt="Eyedropper"
-            style={{
-              transition: "filter 300ms ease 0s",
-              ...(actionMode === "eyedropper" && {
-                filter: "invert(1)",
-              }),
-            }}
-          />
-          Eyedropper Mode
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleRefreshImage}>
-          Refresh Image
-        </Button>
-        <Button variant="outline" size="sm" onClick={handleResetZoom}>
-          Reset Zoom
-        </Button>
-        <SubmitButton
-          actions={actions}
-          isPending={isPending}
-          setIsPending={setIsPending}
-          resetDrawnPixels={resetDrawnPixels}
-        />
-
-        <Text>
           Pixels changed: {pixelsChangedNumber}/{MAX_PIXELS}. BONK cost:{" "}
           {totalCost}
         </Text>
 
-        <Flex align="center" mb={4}>
+        <Flex
+          align="center"
+          mb={4}
+          display={{
+            base: "none",
+            md: "flex",
+          }}
+        >
           <RgbStringColorPicker
             color={color}
             onChange={(rgb) => handleRgbChange(rgb)}
@@ -656,16 +666,65 @@ export function Board() {
           </Box>
         </Flex>
 
-        <canvas
-          // @ts-ignore
-          ref={zoomCanvasRef}
-          width={ZOOM_CANVAS_SIZE.width}
-          height={ZOOM_CANVAS_SIZE.height}
-          style={{
-            imageRendering: "pixelated",
-            border: "1px solid black",
+        <Flex
+          pb={4}
+          display={{
+            base: "none",
+            md: "flex",
           }}
-        />
+        >
+          <canvas
+            // @ts-ignore
+            ref={zoomCanvasRef}
+            width={ZOOM_CANVAS_SIZE.width}
+            height={ZOOM_CANVAS_SIZE.height}
+            style={{
+              imageRendering: "pixelated",
+              border: "1px solid black",
+            }}
+          />
+        </Flex>
+
+        <Flex
+          align="center"
+          mb={4}
+          display={{
+            base: "flex",
+            md: "none",
+          }}
+          gap={2}
+          p={2}
+        >
+          <Flex
+            flexDir="column"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Flex alignItems="center" justifyContent="center" w="100%">
+              <RgbStringColorPicker
+                color={color}
+                onChange={(rgb) => handleRgbChange(rgb)}
+              />
+            </Flex>
+          </Flex>
+          <Flex w="100%" h="100%">
+            <div
+              style={{ width: "100%", height: "100%", backgroundColor: "red" }}
+            >
+              <canvas
+                // @ts-ignore
+                width={ZOOM_CANVAS_SIZE.width}
+                height={ZOOM_CANVAS_SIZE.height}
+                ref={zoomCanvasRef}
+                style={{
+                  imageRendering: "pixelated",
+                  border: "1px solid red",
+                  width: "100%",
+                }}
+              />
+            </div>
+          </Flex>
+        </Flex>
       </GridItem>
     </Grid>
   );

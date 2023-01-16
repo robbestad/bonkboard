@@ -58,12 +58,14 @@ export function Layout({ title, children }: LayoutProps) {
         flexDirection="column"
         h="100vh"
         className={dotGothic16.className}
+
         // overflow="hidden"
       >
         <Flex
           position="relative"
           flexGrow={1}
           flexDirection="column"
+
           // overflowY="auto"
         >
           <Header />
