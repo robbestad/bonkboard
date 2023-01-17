@@ -497,20 +497,6 @@ export function Board() {
                 setMouseY(y);
               }
             }}
-            onTouchMove={(e) => {
-              const [x, y] = getCursorPosition(e);
-              if (actionMode === "translate") {
-                const deltaX = x - mouseX;
-                const deltaY = y - mouseY;
-                const panX = deltaX * 2;
-                const panY = deltaY * 2;
-                setTranslateX(translateX + panX);
-                setTranslateY(translateY + panY);
-              } else {
-                setMouseX(x);
-                setMouseY(y);
-              }
-            }}
             // onClick={(e) => {
             //   performActionOnCanvas(e);
             // }}
@@ -695,11 +681,7 @@ export function Board() {
           gap={2}
           p={2}
         >
-          <Flex
-            flexDir="column"
-            justifyContent="center"
-            alignItems="center"
-          >
+          <Flex flexDir="column" justifyContent="center" alignItems="center">
             <Flex alignItems="center" justifyContent="center" w="100%">
               <RgbStringColorPicker
                 color={color}
@@ -707,7 +689,12 @@ export function Board() {
               />
             </Flex>
           </Flex>
-          <Flex w="100%" h="100%">
+
+          <Flex w="100%" h="100%" flexDirection="column">
+            <Text>
+              Pixels changed: {pixelsChangedNumber}/{MAX_PIXELS}. BONK cost:{" "}
+              {totalCost}
+            </Text>
             <div
               style={{ width: "100%", height: "100%", backgroundColor: "red" }}
             >
