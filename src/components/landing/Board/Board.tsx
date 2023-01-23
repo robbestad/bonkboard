@@ -374,6 +374,7 @@ export function Board() {
       const rect = canvas.getBoundingClientRect();
       const x = Math.floor((event.clientX - rect.left) / scale) - 1;
       const y = Math.floor((event.clientY - rect.top) / scale) - 1;
+
       return [x, y];
     }
     return [-1, -1];
@@ -482,6 +483,7 @@ export function Board() {
               border: "1px solid black",
               transform: `scale(${scale})`,
               cursor: "crosshair",
+              touchAction: "none",
             }}
             onMouseMove={(e) => {
               const [x, y] = getCursorPosition(e);
@@ -512,6 +514,21 @@ export function Board() {
               } else if (button === MOUSEWHEEL_BUTTON) {
                 setActionMode("translate");
               }
+            }}
+            onTouchStart={(e) => {
+              setActionMode("draw");
+              const [x, y] = getCursorPosition(e.changedTouches[0]);
+              console.log(x, y);
+              setMouseX(x);
+              setMouseY(y);
+            }}
+            onTouchMove={(e) => {
+              const [x, y] = getCursorPosition(e.changedTouches[0]);
+              setMouseX(x);
+              setMouseY(y);
+            }}
+            onTouchEnd={() => {
+              setActionMode("normal");
             }}
             onMouseUp={({ button }) => {
               if (button === LEFT_MOUSE_BUTTON) {
