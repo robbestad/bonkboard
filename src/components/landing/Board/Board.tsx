@@ -439,7 +439,7 @@ export function Board() {
 
   return (
     <Grid
-      templateColumns={{ md: "3fr 1fr", sm: "1fr", base: "1fr" }}
+      templateColumns={{ md: "5fr 1fr", sm: "1fr", base: "1fr" }}
       minHeight="calc(100% - 96px - 1px)"
       overflow="scroll"
       maxW="100vw"
@@ -527,7 +527,7 @@ export function Board() {
               setMouseX(x);
               setMouseY(y);
             }}
-            onTouchEnd={() => {
+            onTouchEnd={(e) => {
               setActionMode("normal");
             }}
             onMouseUp={({ button }) => {
@@ -650,13 +650,14 @@ export function Board() {
             base: "none",
             md: "flex",
           }}
+          w="100%"
         >
           <RgbStringColorPicker
             color={color}
             onChange={(rgb) => handleRgbChange(rgb)}
           />
 
-          <Box mx={4}>
+          <Box mx={2}>
             <InputGroup>
               <InputLeftAddon>#</InputLeftAddon>
               <Input
@@ -675,6 +676,7 @@ export function Board() {
             base: "none",
             md: "flex",
           }}
+          w="100%"
         >
           <canvas
             // @ts-ignore
@@ -684,10 +686,12 @@ export function Board() {
             style={{
               imageRendering: "pixelated",
               border: "1px solid black",
+              width: "100%",
             }}
           />
         </Flex>
 
+        {/* ----------Mobile--------------*/}
         <Flex
           align="center"
           mb={4}
