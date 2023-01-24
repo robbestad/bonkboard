@@ -4,7 +4,7 @@ import { Box, HStack } from "@chakra-ui/react";
 import { ConnectionSelector } from "@/components/common/ConnectionSelector";
 import { NextLink } from "@/components/common/NextLink";
 import { WalletButton } from "@/components/common/WalletButton";
-import logo from "@/public/logo.png";
+import logo from "@/public/logo2.png";
 
 export function Header() {
   return (
@@ -18,7 +18,7 @@ export function Header() {
     >
       <HStack
         px={{ base: 4, sm: 16 }}
-        py={{ base: 4, sm: 6 }}
+        py={{ base: 1, sm: 1 }}
         mx="auto"
         justifyContent="space-between"
       >
@@ -29,7 +29,7 @@ export function Header() {
             alignItems="center"
             experimental_spaceX={2}
           >
-            <Image src={logo} height={48} priority alt="" />
+            <Image src={logo} height={38} priority alt="" />
             {/* <Text fontSize="2xl" fontWeight={700}>
               Bonkboard.gg
             </Text> */}
