@@ -87,6 +87,7 @@ type ActionMode = "normal" | "eyedropper" | "draw" | "translate";
 
 const LEFT_MOUSE_BUTTON = 0;
 const MOUSEWHEEL_BUTTON = 1;
+const RIGHT_MOUSE_BUTTON = 2;
 
 const DEFAULT_SCALE = 5;
 
@@ -485,6 +486,7 @@ export function Board() {
               cursor: "crosshair",
               touchAction: "none",
             }}
+            onContextMenu={(e) => e.preventDefault()}
             onMouseMove={(e) => {
               const [x, y] = getCursorPosition(e);
               if (actionMode === "translate") {
@@ -513,6 +515,8 @@ export function Board() {
                 }
               } else if (button === MOUSEWHEEL_BUTTON) {
                 setActionMode("translate");
+              } else if (button === RIGHT_MOUSE_BUTTON) {
+                setActionMode("translate");
               }
             }}
             onTouchStart={(e) => {
@@ -534,6 +538,8 @@ export function Board() {
               if (button === LEFT_MOUSE_BUTTON) {
                 setActionMode("normal");
               } else if (button === MOUSEWHEEL_BUTTON) {
+                setActionMode("normal");
+              } else if (button === RIGHT_MOUSE_BUTTON) {
                 setActionMode("normal");
               }
             }}
