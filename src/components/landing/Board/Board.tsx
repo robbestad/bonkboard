@@ -527,7 +527,7 @@ export function Board() {
               setMouseX(x);
               setMouseY(y);
             }}
-            onTouchEnd={(e) => {
+            onTouchEnd={() => {
               setActionMode("normal");
             }}
             onMouseUp={({ button }) => {
